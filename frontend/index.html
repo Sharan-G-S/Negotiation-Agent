@@ -8,726 +8,405 @@
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/framer-motion@10/dist/framer-motion.umd.js" onload="console.log('Framer Motion loaded successfully')" onerror="console.error('Failed to load Framer Motion')"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            200: '#bae6fd',
-                            300: '#7dd3fc',
-                            400: '#38bdf8',
-                            500: '#0ea5e9',
-                            600: '#0284c7',
-                            700: '#0369a1',
-                            800: '#075985',
-                            900: '#0c4a6e',
-                        },
-                        secondary: {
-                            50: '#f8fafc',
-                            100: '#f1f5f9',
-                            200: '#e2e8f0',
-                            300: '#cbd5e1',
-                            400: '#94a3b8',
-                            500: '#64748b',
-                            600: '#475569',
-                            700: '#334155',
-                            800: '#1e293b',
-                            900: '#0f172a',
-                        },
-                        accent: {
-                            50: '#ecfeff',
-                            100: '#cffafe',
-                            200: '#a5f3fc',
-                            300: '#67e8f9',
-                            400: '#22d3ee',
-                            500: '#06b6d4',
-                            600: '#0891b2',
-                            700: '#0e7490',
-                            800: '#155e75',
-                            900: '#164e63',
-                        },
-                        success: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                    },
-                    animation: {
-                        'gradient-x': 'gradient-x 15s ease infinite',
-                        'float': 'float 6s ease-in-out infinite',
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    },
-                    keyframes: {
-                        'gradient-x': {
-                            '0%, 100%': {
-                                'background-size': '200% 200%',
-                                'background-position': 'left center'
-                            },
-                            '50%': {
-                                'background-size': '200% 200%',
-                                'background-position': 'right center'
-                            },
-                        },
-                        'float': {
-                            '0%, 100%': { transform: 'translateY(0px)' },
-                            '50%': { transform: 'translateY(-20px)' },
-                        }
-                    },
-                }
-            }
-        }
-    </script>
     <style>
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
         .glass-effect {
             backdrop-filter: blur(16px) saturate(180%);
-            background-color: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background-color: rgba(255, 255, 255, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.125);
         }
-        .gradient-text {
-            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #22c55e 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .feature-card:hover {
+            transform: translateY(-5px);
+            transition: all 0.3s ease;
         }
-        .bg-gradient-animated {
-            background: linear-gradient(-45deg, #0ea5e9, #06b6d4, #22c55e, #0284c7);
-            background-size: 400% 400%;
-            animation: gradient-x 15s ease infinite;
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
         }
-        .professional-card {
-            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(6, 182, 212, 0.05) 100%);
-            border: 1px solid rgba(14, 165, 233, 0.2);
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-secondary-900 via-secondary-800 to-primary-900 text-secondary-100">
+<body class="bg-gray-50">
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
-        
-        // Fix for React 18 - use createRoot instead of render
-        const { createRoot } = ReactDOM;
-        
-        // Framer Motion setup with proper error handling
-        let motion, AnimatePresence;
-        
-        try {
-            if (typeof Motion !== 'undefined' && Motion.motion) {
-                ({ motion, AnimatePresence } = Motion);
-            } else {
-                throw new Error('Motion not available');
-            }
-        } catch (error) {
-            console.warn('Framer Motion not loaded properly, using fallback components');
-            // Enhanced fallback motion components
-            const createMotionComponent = (tag) => ({ 
-                children, 
-                initial, 
-                animate, 
-                transition, 
-                whileHover, 
-                whileTap, 
-                whileInView,
-                viewport,
-                className, 
-                onClick, 
-                style, 
-                ...props 
-            }) => React.createElement(tag, { 
-                className, 
-                onClick, 
-                style, 
-                ...props 
-            }, children);
-            
-            motion = {
-                div: createMotionComponent('div'),
-                button: createMotionComponent('button'),
-                section: createMotionComponent('section'),
-                h1: createMotionComponent('h1'),
-                h2: createMotionComponent('h2'),
-                p: createMotionComponent('p'),
-            };
-            AnimatePresence = ({ children }) => children;
-        }
 
-        // Icons component (using FontAwesome for simplicity)
-        const Icon = ({ name, className = "w-5 h-5" }) => (
-            <i className={`fas fa-${name} ${className}`}></i>
-        );
+        // Navigation Component
+        const Navigation = ({ currentUser, onLoginClick, onLogout }) => {
+            return (
+                <nav className="bg-white shadow-lg sticky top-0 z-50">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-center h-16">
+                            <div className="flex items-center">
+                                <div className="flex-shrink-0 flex items-center">
+                                    <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                                        🤖
+                                    </div>
+                                    <span className="ml-3 text-xl font-bold text-gray-900">NegotiBot AI</span>
+                                </div>
+                            </div>
+                            
+                            <div className="hidden md:block">
+                                <div className="ml-10 flex items-baseline space-x-8">
+                                    <a href="#home" className="text-gray-900 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Home</a>
+                                    <a href="#features" className="text-gray-500 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Features</a>
+                                    <a href="#negotibot" className="text-gray-500 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">NegotiBot</a>
+                                    <a href="#analytics" className="text-gray-500 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">Analytics</a>
+                                    <a href="#about" className="text-gray-500 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">About</a>
+                                </div>
+                            </div>
 
-        // Main Landing Page Component
-        const LandingPage = () => {
-            const [showAuth, setShowAuth] = useState(false);
-            const [userType, setUserType] = useState('buyer');
-            const [user, setUser] = useState(null);
+                            <div className="flex items-center space-x-4">
+                                {currentUser ? (
+                                    <div className="flex items-center space-x-4">
+                                        <span className="text-gray-700">Welcome, {currentUser.name}</span>
+                                        <button 
+                                            onClick={onLogout}
+                                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                                        >
+                                            Logout
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <button 
+                                            onClick={onLoginClick}
+                                            className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium"
+                                        >
+                                            Seller Login
+                                        </button>
+                                        <button 
+                                            onClick={() => window.location.href = '/react/react-app.html'}
+                                            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium"
+                                        >
+                                            Start Negotiating
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            );
+        };
 
-            const handleGetStarted = (type) => {
-                setUserType(type);
-                setShowAuth(true);
-            };
+        // Hero Section Component
+        const HeroSection = () => {
+            return (
+                <div id="home" className="gradient-bg relative overflow-hidden">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="relative z-10 pb-8 sm:pb-16 md:pb-20 lg:pb-28 xl:pb-32">
+                            <main className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
+                                <div className="sm:text-center lg:text-left">
+                                    <h1 className="text-4xl tracking-tight font-extrabold text-white sm:text-5xl md:text-6xl">
+                                        <span className="block">Smart AI-Powered</span>
+                                        <span className="block text-yellow-300">Marketplace Negotiation</span>
+                                    </h1>
+                                    <p className="mt-3 text-base text-gray-100 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
+                                        Let our advanced AI negotiate the best deals for you on OLX, Facebook Marketplace, and other platforms. Save time, get better prices, and negotiate like a pro.
+                                    </p>
+                                    <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
+                                        <div className="rounded-md shadow">
+                                            <button 
+                                                onClick={() => window.location.href = '/react/react-app.html'}
+                                                className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-purple-700 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10"
+                                            >
+                                                🚀 Start Negotiating Now
+                                            </button>
+                                        </div>
+                                        <div className="mt-3 sm:mt-0 sm:ml-3">
+                                            <button 
+                                                onClick={() => document.getElementById('features').scrollIntoView()}
+                                                className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 md:py-4 md:text-lg md:px-10"
+                                            >
+                                                Learn More
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </main>
+                        </div>
+                    </div>
+                    <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
+                        <div className="h-56 w-full sm:h-72 md:h-96 lg:w-full lg:h-full flex items-center justify-center">
+                            <div className="animate-float text-8xl">🤖💬💰</div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
 
-            const handleAuthSuccess = (userData, token, sessionId) => {
-                // Store session data in localStorage using the same keys as buyer portal
-                const sessionData = {
-                    user_id: userData.user_id,
-                    username: userData.username || userData.email,
-                    email: userData.email,
-                    full_name: userData.full_name,
-                    role: userData.role,
-                    token: token,
-                    session_id: sessionId,
-                    login_time: new Date().toISOString()
-                };
-                
-                try {
-                    localStorage.setItem('negotiation_session', JSON.stringify(sessionData));
-                    // Also store in buyer portal format for sync
-                    localStorage.setItem('negotibot_user', JSON.stringify(userData));
-                    localStorage.setItem('negotibot_token', token);
-                    localStorage.setItem('negotibot_session', sessionId);
-                } catch (e) {
-                    console.warn('Failed to store session data:', e);
+        // Features Section Component
+        const FeaturesSection = () => {
+            const features = [
+                {
+                    icon: "🤖",
+                    title: "AI-Powered Negotiation",
+                    description: "Our advanced AI analyzes market data and negotiates like a human to get you the best deals."
+                },
+                {
+                    icon: "📊",
+                    title: "Market Intelligence",
+                    description: "Real-time price analysis across multiple platforms to ensure you never overpay."
+                },
+                {
+                    icon: "🕷️",
+                    title: "Smart Web Scraping",
+                    description: "Automatically extracts product details, seller information, and market comparisons."
+                },
+                {
+                    icon: "💬",
+                    title: "Human-like Communication",
+                    description: "Natural language processing ensures sellers never know they're talking to an AI."
+                },
+                {
+                    icon: "⚡",
+                    title: "Real-time Analytics",
+                    description: "Live negotiation progress tracking and success probability calculations."
+                },
+                {
+                    icon: "🛡️",
+                    title: "Risk Assessment",
+                    description: "Comprehensive deal evaluation to protect you from potential scams or overpricing."
                 }
-                
-                setUser(userData);
-                setShowAuth(false);
-                
-                // Redirect based on user type
-                console.log('Redirecting user with role:', userData?.role);
-                if (userData && userData.role === 'seller') {
-                    console.log('Redirecting to seller portal...');
-                    window.location.href = './seller-portal.html';
-                } else {
-                    console.log('Redirecting to buyer portal...');
-                    window.location.href = './react-app.html';
-                }
-            };
-
-            if (showAuth) {
-                return <UnifiedAuth onAuthSuccess={handleAuthSuccess} userType={userType} />;
-            }
+            ];
 
             return (
-                <div className="min-h-screen bg-gradient-to-br from-secondary-900 via-secondary-800 to-primary-900">
-                    {/* Hero Section */}
-                    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-                        {/* Background Effects */}
-                        <div className="absolute inset-0 bg-gradient-animated opacity-15"></div>
-                        <div className="absolute inset-0">
-                            <div className="absolute top-20 left-10 w-72 h-72 bg-primary-600 rounded-full mix-blend-multiply filter blur-xl opacity-15 animate-float"></div>
-                            <div className="absolute top-40 right-10 w-72 h-72 bg-accent-600 rounded-full mix-blend-multiply filter blur-xl opacity-15 animate-float" style={{animationDelay: '2s'}}></div>
-                            <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-success-600 rounded-full mix-blend-multiply filter blur-xl opacity-15 animate-float" style={{animationDelay: '4s'}}></div>
+                <div id="features" className="py-12 bg-white">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="lg:text-center">
+                            <h2 className="text-base text-purple-600 font-semibold tracking-wide uppercase">Features</h2>
+                            <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                                Everything you need to negotiate better deals
+                            </p>
+                            <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+                                Our comprehensive platform combines AI, market intelligence, and human psychology to maximize your negotiation success.
+                            </p>
                         </div>
 
-                        <div className="relative z-10 text-center px-4 max-w-6xl mx-auto">
-                            <motion.div
-                                initial={{ opacity: 0, y: 30 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.8 }}
-                            >
-                                <motion.div 
-                                    className="inline-flex items-center gap-2 px-6 py-3 professional-card rounded-full text-primary-300 text-sm font-semibold mb-8"
-                                    whileHover={{ scale: 1.05 }}
-                                >
-                                    <Icon name="cpu" className="w-4 h-4" />
-                                    Powered by Advanced AI Technology
-                                </motion.div>
-
-                                <h1 className="text-6xl md:text-8xl font-black mb-6 leading-tight">
-                                    <span className="gradient-text">NegotiateBot AI</span>
-                                    <br />
-                                </h1>
-
-                                <p className="text-xl md:text-2xl text-secondary-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-                                    Enterprise-grade AI negotiation platform delivering superior results through 
-                                    intelligent strategies and comprehensive market analysis.
-                                </p>
-
-                                <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                                    <motion.button
-                                        onClick={() => handleGetStarted('buyer')}
-                                        className="px-10 py-5 bg-gradient-to-r from-primary-600 to-accent-500 text-white font-semibold rounded-xl shadow-2xl hover:shadow-primary-500/30 transition-all duration-300 flex items-center gap-3 text-lg group"
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                    >
-                                        <Icon name="shopping-cart" />
-                                        Start as Buyer
-                                        <Icon name="arrow-right" className="group-hover:translate-x-1 transition-transform" />
-                                    </motion.button>
-
-                                    <motion.button
-                                        onClick={() => handleGetStarted('seller')}
-                                        className="px-10 py-5 professional-card text-white font-semibold rounded-xl hover:bg-white/15 transition-all duration-300 flex items-center gap-3 text-lg group"
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                    >
-                                        <Icon name="store" />
-                                        Join as Seller
-                                        <Icon name="external-link-alt" className="group-hover:translate-x-1 transition-transform" />
-                                    </motion.button>
-                                </div>
-
-                                <div className="mt-16 flex items-center justify-center gap-12 text-sm text-secondary-400">
-                                    <div className="flex items-center gap-3">
-                                        <Icon name="check-circle" className="w-5 h-5 text-success-400" />
-                                        <span className="font-medium">Free to Start</span>
+                        <div className="mt-10">
+                            <div className="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10 lg:grid-cols-3">
+                                {features.map((feature, index) => (
+                                    <div key={index} className="feature-card bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                                        <div className="text-4xl mb-4">{feature.icon}</div>
+                                        <h3 className="text-lg font-medium text-gray-900 mb-2">{feature.title}</h3>
+                                        <p className="text-gray-500">{feature.description}</p>
                                     </div>
-                                    <div className="flex items-center gap-3">
-                                        <Icon name="shield-alt" className="w-5 h-5 text-primary-400" />
-                                        <span className="font-medium">Enterprise Security</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Icon name="bolt" className="w-5 h-5 text-accent-400" />
-                                        <span className="font-medium">Instant Results</span>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        </div>
-                    </section>
-
-                    {/* Features Section */}
-                    <section className="py-20 px-4">
-                        <div className="max-w-7xl mx-auto">
-                            <motion.div 
-                                className="text-center mb-16"
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                            >
-                                <h2 className="text-4xl md:text-5xl font-bold gradient-text mb-6">
-                                    Enterprise Negotiation Platform
-                                </h2>
-                                <p className="text-xl text-secondary-300 max-w-3xl mx-auto">
-                                    Professional-grade AI technology delivering superior negotiation outcomes 
-                                    through intelligent market analysis and strategic automation.
-                                </p>
-                            </motion.div>
-
-                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                {[
-                                    {
-                                        icon: 'brain',
-                                        title: 'AI-Powered Analytics',
-                                        description: 'Advanced algorithms analyze market patterns and seller behavior to optimize negotiation strategies.',
-                                        color: 'from-primary-500 to-primary-700'
-                                    },
-                                    {
-                                        icon: 'chart-line',
-                                        title: 'Market Intelligence',
-                                        description: 'Real-time price analysis and market insights provide strategic advantages in negotiations.',
-                                        color: 'from-accent-500 to-accent-700'
-                                    },
-                                    {
-                                        icon: 'comments',
-                                        title: 'Professional Communication',
-                                        description: 'Seamless integration between buyers and sellers with AI-assisted communication tools.',
-                                        color: 'from-success-500 to-success-700'
-                                    },
-                                    {
-                                        icon: 'shield-alt',
-                                        title: 'Enterprise Security',
-                                        description: 'Bank-level encryption and security protocols protect your business negotiations.',
-                                        color: 'from-primary-600 to-accent-600'
-                                    },
-                                    {
-                                        icon: 'bolt',
-                                        title: 'Instant Processing',
-                                        description: 'High-performance systems deliver negotiation results and market analysis in real-time.',
-                                        color: 'from-accent-600 to-success-600'
-                                    },
-                                    {
-                                        icon: 'trophy',
-                                        title: 'Superior Results',
-                                        description: 'Proven track record of 25-40% better negotiation outcomes compared to traditional methods.',
-                                        color: 'from-success-600 to-primary-600'
-                                    }
-                                ].map((feature, index) => (
-                                    <motion.div
-                                        key={index}
-                                        className="professional-card rounded-xl p-8 hover:bg-white/10 transition-all duration-300 border-l-4 border-l-primary-500"
-                                        initial={{ opacity: 0, y: 30 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
-                                        viewport={{ once: true }}
-                                        transition={{ delay: index * 0.1 }}
-                                        whileHover={{ scale: 1.02 }}
-                                    >
-                                        <div className={`w-14 h-14 bg-gradient-to-r ${feature.color} rounded-lg flex items-center justify-center mb-6 shadow-lg`}>
-                                            <Icon name={feature.icon} className="w-7 h-7 text-white" />
-                                        </div>
-                                        <h3 className="text-xl font-semibold text-white mb-4">{feature.title}</h3>
-                                        <p className="text-secondary-300 leading-relaxed">{feature.description}</p>
-                                    </motion.div>
                                 ))}
                             </div>
                         </div>
-                    </section>
+                    </div>
+                </div>
+            );
+        };
 
-                    {/* CTA Section */}
-                    <section className="py-20 px-4">
-                        <div className="max-w-4xl mx-auto text-center">
-                            <motion.div
-                                className="glass-effect rounded-3xl p-12 bg-gradient-to-r from-primary-600/20 to-accent-600/20"
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                            >
-                                <h2 className="text-4xl md:text-5xl font-bold gradient-text mb-6">
-                                    Ready to Transform Your Negotiations?
+        // NegotiBot Section Component
+        const NegotiBotSection = () => {
+            return (
+                <div id="negotibot" className="py-16 bg-gradient-to-r from-purple-50 to-blue-50">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center">
+                            <div>
+                                <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                                    Meet NegotiBot AI
                                 </h2>
-                                <p className="text-xl text-gray-300 mb-8">
-                                    Join thousands of users who are already getting better deals with AI
+                                <p className="mt-3 max-w-3xl text-lg text-gray-500">
+                                    Your personal AI negotiation assistant that works 24/7 to get you the best deals on marketplace platforms.
                                 </p>
-                                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                    <motion.button
-                                        onClick={() => handleGetStarted('buyer')}
-                                        className="px-8 py-4 bg-gradient-to-r from-primary-600 to-accent-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                    >
-                                        Get Started Free
-                                    </motion.button>
-                                </div>
-                            </motion.div>
-                        </div>
-                    </section>
+                                
+                                <div className="mt-8 space-y-6">
+                                    <div className="flex items-start">
+                                        <div className="flex-shrink-0">
+                                            <div className="flex items-center justify-center h-12 w-12 rounded-md bg-purple-500 text-white">
+                                                <i class="fas fa-link"></i>
+                                            </div>
+                                        </div>
+                                        <div className="ml-4">
+                                            <h4 className="text-lg font-medium text-gray-900">Paste Any Product URL</h4>
+                                            <p className="mt-2 text-base text-gray-500">
+                                                Simply paste a link from OLX, Facebook Marketplace, or any supported platform.
+                                            </p>
+                                        </div>
+                                    </div>
 
-                    {/* Footer */}
-                    <footer className="py-12 px-4 border-t border-white/10">
-                        <div className="max-w-7xl mx-auto text-center">
-                            <div className="flex items-center justify-center gap-2 mb-4">
-                                <div className="w-8 h-8 bg-gradient-to-r from-primary-500 to-accent-500 rounded-lg flex items-center justify-center">
-                                    <Icon name="robot" className="w-4 h-4 text-white" />
+                                    <div className="flex items-start">
+                                        <div className="flex-shrink-0">
+                                            <div className="flex items-center justify-center h-12 w-12 rounded-md bg-purple-500 text-white">
+                                                <i class="fas fa-chart-line"></i>
+                                            </div>
+                                        </div>
+                                        <div className="ml-4">
+                                            <h4 className="text-lg font-medium text-gray-900">AI Analyzes Everything</h4>
+                                            <p className="mt-2 text-base text-gray-500">
+                                                Market prices, product condition, seller behavior, and negotiation opportunities.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start">
+                                        <div className="flex-shrink-0">
+                                            <div className="flex items-center justify-center h-12 w-12 rounded-md bg-purple-500 text-white">
+                                                <i class="fas fa-handshake"></i>
+                                            </div>
+                                        </div>
+                                        <div className="ml-4">
+                                            <h4 className="text-lg font-medium text-gray-900">Negotiate Like a Pro</h4>
+                                            <p className="mt-2 text-base text-gray-500">
+                                                AI handles the negotiation using proven tactics and market data.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <span className="text-xl font-bold gradient-text">NegotiBot AI</span>
+
+                                <div className="mt-8">
+                                    <button 
+                                        onClick={() => window.location.href = '/react/react-app.html'}
+                                        className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                                    >
+                                        Try NegotiBot Now
+                                        <i class="fas fa-arrow-right ml-2"></i>
+                                    </button>
+                                </div>
                             </div>
-                            <p className="text-gray-400 text-sm">
-                                © 2024 NegotiBot AI. All rights reserved. Powered by advanced AI technology.
+
+                            <div className="mt-10 lg:mt-0">
+                                <div className="glass-effect rounded-2xl p-8 shadow-2xl">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center space-x-3">
+                                            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm">AI</div>
+                                            <div className="flex-1 bg-white rounded-lg p-3 shadow-sm">
+                                                <p className="text-sm text-gray-700">Based on market research, I can offer ₹25,000 for immediate purchase.</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center space-x-3 justify-end">
+                                            <div className="flex-1 bg-purple-100 rounded-lg p-3 shadow-sm text-right">
+                                                <p className="text-sm text-gray-700">The price is ₹30,000. Can you do ₹28,000?</p>
+                                            </div>
+                                            <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm">S</div>
+                                        </div>
+                                        <div className="flex items-center space-x-3">
+                                            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm">AI</div>
+                                            <div className="flex-1 bg-white rounded-lg p-3 shadow-sm">
+                                                <p className="text-sm text-gray-700">I appreciate the flexibility. How about ₹26,500? I can collect today.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 text-center">
+                                        <span className="text-sm text-gray-500">Live negotiation in progress...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Analytics Section Component
+        const AnalyticsSection = () => {
+            return (
+                <div id="analytics" className="py-16 bg-white">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="text-center">
+                            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                                Powerful Analytics & Insights
+                            </h2>
+                            <p className="mt-4 max-w-2xl mx-auto text-xl text-gray-500">
+                                Track your negotiation success and market trends with comprehensive analytics.
                             </p>
+                        </div>
+
+                        <div className="mt-12 grid grid-cols-1 gap-8 lg:grid-cols-3">
+                            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-8 text-center">
+                                <div className="text-4xl font-bold text-green-600 mb-2">87%</div>
+                                <div className="text-lg font-medium text-gray-900 mb-2">Success Rate</div>
+                                <div className="text-sm text-gray-600">Average negotiation success across all users</div>
+                            </div>
+                            
+                            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-8 text-center">
+                                <div className="text-4xl font-bold text-blue-600 mb-2">₹8,500</div>
+                                <div className="text-lg font-medium text-gray-900 mb-2">Average Savings</div>
+                                <div className="text-sm text-gray-600">Money saved per successful negotiation</div>
+                            </div>
+                            
+                            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-8 text-center">
+                                <div className="text-4xl font-bold text-purple-600 mb-2">12 min</div>
+                                <div className="text-lg font-medium text-gray-900 mb-2">Average Time</div>
+                                <div className="text-sm text-gray-600">Time to complete negotiation</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Main App Component
+        const App = () => {
+            const [currentUser, setCurrentUser] = useState(null);
+            const [showLogin, setShowLogin] = useState(false);
+
+            const handleLoginClick = () => {
+                // For now, redirect to seller portal (we'll implement this later)
+                window.location.href = '/seller-portal.html';
+            };
+
+            const handleLogout = () => {
+                setCurrentUser(null);
+                localStorage.removeItem('user');
+            };
+
+            useEffect(() => {
+                // Check if user is logged in
+                const savedUser = localStorage.getItem('user');
+                if (savedUser) {
+                    setCurrentUser(JSON.parse(savedUser));
+                }
+            }, []);
+
+            return (
+                <div className="min-h-screen">
+                    <Navigation 
+                        currentUser={currentUser} 
+                        onLoginClick={handleLoginClick}
+                        onLogout={handleLogout}
+                    />
+                    <HeroSection />
+                    <FeaturesSection />
+                    <NegotiBotSection />
+                    <AnalyticsSection />
+                    
+                    {/* Footer */}
+                    <footer className="bg-gray-900">
+                        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 md:flex md:items-center md:justify-between lg:px-8">
+                            <div className="flex justify-center space-x-6 md:order-2">
+                                <span className="text-gray-400 text-sm">
+                                    © 2025 NegotiBot AI. All rights reserved.
+                                </span>
+                            </div>
+                            <div className="mt-8 md:mt-0 md:order-1">
+                                <div className="flex items-center justify-center md:justify-start">
+                                    <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center mr-3">
+                                        🤖
+                                    </div>
+                                    <span className="text-xl font-bold text-white">NegotiBot AI</span>
+                                </div>
+                            </div>
                         </div>
                     </footer>
                 </div>
             );
         };
 
-        // Unified Auth Component
-        const UnifiedAuth = ({ onAuthSuccess, userType = 'buyer' }) => {
-            const [isLogin, setIsLogin] = useState(true);
-            const [showPassword, setShowPassword] = useState(false);
-            const [isLoading, setIsLoading] = useState(false);
-            const [formData, setFormData] = useState({
-                name: '',
-                email: '',
-                phone: '',
-                password: '',
-                confirmPassword: '',
-                userType: userType
-            });
-
-            const handleInputChange = (e) => {
-                setFormData(prev => ({
-                    ...prev,
-                    [e.target.name]: e.target.value
-                }));
-            };
-
-            const handleSubmit = async (e) => {
-                e.preventDefault();
-                setIsLoading(true);
-
-                try {
-                    // Client-side validation
-                    if (!formData.email || !formData.password) {
-                        alert('Please fill in all required fields');
-                        return;
-                    }
-
-                    if (!isLogin) {
-                        if (!formData.name || !formData.phone) {
-                            alert('Please fill in all required fields (Name and Phone are required for registration)');
-                            return;
-                        }
-                        if (formData.password !== formData.confirmPassword) {
-                            alert('Passwords do not match');
-                            return;
-                        }
-                        if (formData.phone.length < 10) {
-                            alert('Please enter a valid phone number (at least 10 digits)');
-                            return;
-                        }
-                    }
-
-                    // Use relative URLs since we'll serve from the same backend
-                    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-                    
-                    // Fix: Use correct field names for backend API
-                    const payload = isLogin 
-                        ? { 
-                            username: formData.email, 
-                            password: formData.password, 
-                            role: formData.userType 
-                        }
-                        : { 
-                            username: formData.email, // Using email as username
-                            email: formData.email,
-                            full_name: formData.name, 
-                            phone: formData.phone || '1234567890', // Use provided phone or default
-                            password: formData.password,
-                            role: formData.userType
-                        };
-
-                    const response = await fetch(endpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok && data.success && data.user) {
-                        console.log('Authentication successful:', data);
-                        console.log('User data:', data.user);
-                        console.log('User role:', data.user.role);
-                        onAuthSuccess(data.user, data.token, data.session_id);
-                    } else {
-                        // Handle different types of errors with user-friendly messages
-                        let errorMessage = 'Authentication failed';
-                        let detailsMessage = '';
-                        
-                        if (data && typeof data === 'object') {
-                            if (data.message) {
-                                errorMessage = data.message;
-                            }
-                            
-                            if (data.errors && Array.isArray(data.errors)) {
-                                detailsMessage = '\n\nPlease fix the following:\n• ' + data.errors.join('\n• ');
-                            }
-                            
-                            if (data.hint) {
-                                detailsMessage += '\n\n💡 ' + data.hint;
-                            }
-                        } else if (typeof data === 'string') {
-                            errorMessage = data;
-                        }
-                        
-                        // Show user-friendly error in a better format
-                        const fullMessage = errorMessage + detailsMessage;
-                        alert(fullMessage);
-                        console.error('Authentication response:', data);
-                    }
-                } catch (error) {
-                    console.error('Auth error:', error);
-                    
-                    // More specific network error messages
-                    let errorMessage = 'Connection failed. Please check your internet connection and try again.';
-                    
-                    if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                        errorMessage = 'Unable to connect to the backend server. Please ensure the server is running on port 8000.';
-                    } else if (error.message.includes('timeout')) {
-                        errorMessage = 'Request timed out. Please try again.';
-                    } else if (error.message.includes('ERR_BLOCKED_BY_CLIENT')) {
-                        errorMessage = 'Request blocked by browser or ad blocker. Please disable ad blockers and try again.';
-                    }
-                    
-                    // Also show the actual error for debugging
-                    alert(errorMessage + '\n\nDebug info: ' + error.message);
-                } finally {
-                    setIsLoading(false);
-                }
-            };
-
-            const userTypeConfig = {
-                buyer: {
-                    title: 'Buyer Portal',
-                    subtitle: 'Smart AI-powered negotiation for better deals',
-                    icon: 'shopping-cart',
-                    gradient: 'from-primary-600 to-accent-600'
-                },
-                seller: {
-                    title: 'Seller Portal',
-                    subtitle: 'Manage negotiations and connect with buyers',
-                    icon: 'store',
-                    gradient: 'from-accent-600 to-primary-600'
-                }
-            };
-
-            const config = userTypeConfig[userType];
-
-            return (
-                <div className="min-h-screen bg-gradient-to-br from-secondary-950 via-secondary-900 to-primary-950 flex items-center justify-center p-4">
-                    <div className="w-full max-w-md">
-                        <motion.div 
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="text-center mb-8"
-                        >
-                            <div className={`w-20 h-20 bg-gradient-to-br ${config.gradient} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-2xl`}>
-                                <Icon name={config.icon} className="w-10 h-10 text-white" />
-                            </div>
-                            <h1 className="text-3xl font-bold gradient-text mb-2">
-                                {config.title}
-                            </h1>
-                            <p className="text-gray-400 text-sm">{config.subtitle}</p>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="glass-effect rounded-2xl shadow-2xl overflow-hidden"
-                        >
-                            <div className="flex border-b border-white/10">
-                                <button
-                                    onClick={() => setIsLogin(true)}
-                                    className={`flex-1 px-6 py-4 text-sm font-semibold transition-all duration-300 ${
-                                        isLogin ? 'bg-gradient-to-r from-primary-600 to-accent-600 text-white' : 'text-gray-400 hover:text-white'
-                                    }`}
-                                >
-                                    Sign In
-                                </button>
-                                <button
-                                    onClick={() => setIsLogin(false)}
-                                    className={`flex-1 px-6 py-4 text-sm font-semibold transition-all duration-300 ${
-                                        !isLogin ? 'bg-gradient-to-r from-primary-600 to-accent-600 text-white' : 'text-gray-400 hover:text-white'
-                                    }`}
-                                >
-                                    Sign Up
-                                </button>
-                            </div>
-
-                            <div className="p-8">
-                                <form onSubmit={handleSubmit} className="space-y-6">
-                                    {!isLogin && (
-                                        <input
-                                            type="text"
-                                            name="name"
-                                            value={formData.name}
-                                            onChange={handleInputChange}
-                                            placeholder="Full Name"
-                                            required={!isLogin}
-                                            className="w-full px-4 py-4 bg-secondary-800/70 border border-primary-600/30 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-400 backdrop-blur-sm transition-all duration-300"
-                                        />
-                                    )}
-
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={formData.email}
-                                        onChange={handleInputChange}
-                                        placeholder="Email Address"
-                                        required
-                                        className="w-full px-4 py-4 bg-secondary-800/70 border border-primary-600/30 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-400 backdrop-blur-sm transition-all duration-300"
-                                    />
-
-                                    {!isLogin && (
-                                        <input
-                                            type="tel"
-                                            name="phone"
-                                            value={formData.phone}
-                                            onChange={handleInputChange}
-                                            placeholder="Phone Number"
-                                            required={!isLogin}
-                                            className="w-full px-4 py-4 bg-secondary-800/70 border border-primary-600/30 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-400 backdrop-blur-sm transition-all duration-300"
-                                        />
-                                    )}
-
-                                    <div className="relative">
-                                        <input
-                                            type={showPassword ? 'text' : 'password'}
-                                            name="password"
-                                            value={formData.password}
-                                            onChange={handleInputChange}
-                                            placeholder="Password"
-                                            required
-                                            className="w-full px-4 py-4 pr-12 bg-secondary-800/70 border border-primary-600/30 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-400 backdrop-blur-sm transition-all duration-300"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition-colors duration-200"
-                                        >
-                                            {showPassword ? (
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                                                </svg>
-                                            ) : (
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.543 7-1.274 4.057-5.064 7-9.543 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                </svg>
-                                            )}
-                                        </button>
-                                    </div>
-
-                                    {!isLogin && (
-                                        <div className="relative">
-                                            <input
-                                                type={showPassword ? 'text' : 'password'}
-                                                name="confirmPassword"
-                                                value={formData.confirmPassword}
-                                                onChange={handleInputChange}
-                                                placeholder="Confirm Password"
-                                                required={!isLogin}
-                                                className="w-full px-4 py-4 pr-12 bg-secondary-800/70 border border-primary-600/30 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-400 backdrop-blur-sm transition-all duration-300"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition-colors duration-200"
-                                            >
-                                                {showPassword ? (
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                                                    </svg>
-                                                ) : (
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.543 7-1.274 4.057-5.064 7-9.543 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                    </svg>
-                                                )}
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    <motion.button
-                                        type="submit"
-                                        disabled={isLoading}
-                                        className={`w-full px-6 py-4 bg-gradient-to-r ${config.gradient} text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ${
-                                            isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'
-                                        }`}
-                                        whileTap={{ scale: 0.98 }}
-                                    >
-                                        {isLoading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
-                                    </motion.button>
-                                </form>
-                            </div>
-                        </motion.div>
-                    </div>
-                </div>
-            );
-        };
-
-        // Render the app using React 18's createRoot API
-        const root = createRoot(document.getElementById('root'));
-        root.render(<LandingPage />);
+        ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>
 </html>

@@ -2,17 +2,6 @@ from fastapi import WebSocket, WebSocketDisconnect
 from typing import Dict, Optional
 import json
 import asyncio
-from enum import Enum
-from datetime import datetime
-
-class CustomJSONEncoder(json.JSONEncoder):
-    """Custom JSON encoder to handle Enum and datetime objects"""
-    def default(self, obj):
-        if isinstance(obj, Enum):
-            return obj.value
-        elif isinstance(obj, datetime):
-            return obj.isoformat()
-        return super().default(obj)
 
 
 class ConnectionManager:
@@ -25,7 +14,7 @@ class ConnectionManager:
         """Connect user (AI agent) to session"""
         await websocket.accept()
         self.user_connections[session_id] = websocket
-        print(f"[INFO] User connected to session: {session_id}")
+        print(f"✅ User connected to session: {session_id}")
         
         # Send connection confirmation
         await self.send_to_user(session_id, {
@@ -38,7 +27,7 @@ class ConnectionManager:
         """Connect seller to session"""
         await websocket.accept()
         self.seller_connections[session_id] = websocket
-        print(f"[INFO] Seller connected to session: {session_id}")
+        print(f"✅ Seller connected to session: {session_id}")
         
         # Send connection confirmation
         await self.send_to_seller(session_id, {
@@ -57,13 +46,13 @@ class ConnectionManager:
         """Disconnect user from session"""
         if session_id in self.user_connections:
             del self.user_connections[session_id]
-            print(f"[INFO] User disconnected from session: {session_id}")
+            print(f"❌ User disconnected from session: {session_id}")
     
     def disconnect_seller(self, session_id: str):
         """Disconnect seller from session"""
         if session_id in self.seller_connections:
             del self.seller_connections[session_id]
-            print(f"[INFO] Seller disconnected from session: {session_id}")
+            print(f"❌ Seller disconnected from session: {session_id}")
             
         # Notify user that seller went offline
         asyncio.create_task(self.send_to_user(session_id, {
@@ -76,7 +65,7 @@ class ConnectionManager:
         if session_id in self.user_connections:
             try:
                 websocket = self.user_connections[session_id]
-                await websocket.send_text(json.dumps(message, cls=CustomJSONEncoder))
+                await websocket.send_text(json.dumps(message))
             except Exception as e:
                 print(f"Error sending message to user {session_id}: {e}")
                 self.disconnect_user(session_id)
@@ -86,7 +75,7 @@ class ConnectionManager:
         if session_id in self.seller_connections:
             try:
                 websocket = self.seller_connections[session_id]
-                await websocket.send_text(json.dumps(message, cls=CustomJSONEncoder))
+                await websocket.send_text(json.dumps(message))
             except Exception as e:
                 print(f"Error sending message to seller {session_id}: {e}")
                 self.disconnect_seller(session_id)

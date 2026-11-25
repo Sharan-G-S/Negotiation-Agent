@@ -1,0 +1,16 @@
+{
+  "session_20250925_114538_617031": {
+    "id": "session_20250925_114538_617031",
+    "created_at": "2025-09-25T11:45:38.617057",
+    "status": "active",
+    "data": {
+      "product": "iPhone 13 Pro",
+      "target_price": 500,
+      "max_price": 800,
+      "user_id": "interactive_user",
+      "tone": "professional"
+    },
+    "messages": [],
+    "context_updates": []
+  }
+}

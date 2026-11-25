@@ -3,16 +3,13 @@ Full Negotiation Agent Application
 Complete implementation of the marketplace negotiation workflow
 """
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, BackgroundTasks, Depends, Header, Request
-from fastapi.exceptions import RequestValidationError
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, BackgroundTasks, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from contextlib import asynccontextmanager
-from enum import Enum
-from pathlib import Path
 import json
 import asyncio
 import uuid
@@ -37,11 +34,8 @@ from gemini_service import GeminiOnlyService
 from websocket_manager import ConnectionManager
 from session_manager import AdvancedSessionManager
 from scraper_service import MarketplaceScraper, MarketIntelligence
-from enhanced_scraper import EnhancedMarketplaceScraper
 from negotiation_engine import AdvancedNegotiationEngine
 from auth_service import AuthenticationService
-from enhanced_ai_service import EnhancedAIService
-# from mcp_integration import initialize_mcp_server  # Temporarily commented out
 
 # Pydantic models for API endpoints
 class URLNegotiationRequest(BaseModel):
@@ -51,7 +45,6 @@ class URLNegotiationRequest(BaseModel):
     approach: str = Field(..., description="Negotiation approach: assertive, diplomatic, considerate")
     timeline: str = Field(default="flexible", description="Purchase timeline: urgent, week, flexible")
     special_requirements: Optional[str] = Field(None, description="Special requirements")
-    scraping_method: Optional[str] = Field(default="enhanced", description="Scraping method: enhanced, standard")
 
 class SellerResponseRequest(BaseModel):
     session_id: str
@@ -63,26 +56,19 @@ class SessionEndRequest(BaseModel):
     final_price: Optional[int] = None
     user_notes: Optional[str] = None
 
-# Import custom modules
-
-# User Role Enum
-class UserRole(str, Enum):
-    BUYER = "buyer"
-    SELLER = "seller"
-
 # Authentication models
 class UserRegistration(BaseModel):
-    username: str = Field(..., min_length=3, max_length=30, description="Username")
-    email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$', description="Valid email address")
-    full_name: str = Field(..., min_length=2, description="Full name")
-    phone: str = Field(..., min_length=10, max_length=15, description="Phone number (required)")
-    password: str = Field(..., min_length=6, description="Password (minimum 6 characters)")
-    role: UserRole = Field(..., description="User role: buyer or seller")
+    username: str = Field(..., min_length=3, max_length=30)
+    email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
+    password: str = Field(..., min_length=6)
+    full_name: str = Field(..., min_length=2)
+    phone: Optional[str] = None
+    role: str = Field(..., description="User role: buyer or seller")
 
 class UserLogin(BaseModel):
-    username: str = Field(..., description="Username")
-    password: str = Field(..., description="Password")
-    role: UserRole = Field(..., description="User role: buyer or seller")
+    username: str
+    password: str
+    role: Optional[str] = Field(None, description="User role: buyer or seller (optional)")
 
 class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = None
@@ -96,21 +82,8 @@ class LogoutRequest(BaseModel):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    global mcp_server
     await db.initialize()
-    
-    # Initialize MCP server
-    try:
-        # mcp_server = initialize_mcp_server(db, session_manager)  # Temporarily commented out
-        logger.info("INFO: MCP server initialized successfully!")
-    except Exception as e:
-        logger.warning(f"MCP server initialization failed: {e}")
-    
-    logger.info("INFO: NegotiBot AI Enhanced Backend started successfully!")
-    logger.info("INFO: - LangChain Agent: Fully Integrated & Active")
-    logger.info("INFO: - MCP Integration: Available (Currently Disabled)") 
-    logger.info("INFO: - Gemini Fallback: Available")
-    logger.info("INFO: - Advanced Negotiation Tools: Market Analysis, Price Calculator, Strategy Advisor")
+    logger.info("✅ NegotiBot AI Full Backend started successfully!")
     yield
     # Shutdown (if needed)
     pass
@@ -135,81 +108,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Custom validation error handler
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """Handle validation errors with user-friendly messages"""
-    from fastapi.responses import JSONResponse
-    
-    # Map technical field names to user-friendly names
-    field_mapping = {
-        "username": "Username",
-        "password": "Password", 
-        "email": "Email",
-        "full_name": "Full Name",
-        "phone": "Phone Number",
-        "role": "Account Type"
-    }
-    
-    # Map technical error messages to user-friendly ones
-    message_mapping = {
-        "field required": "is required",
-        "string too short": "is too short",
-        "string too long": "is too long",
-        "value is not a valid email address": "must be a valid email address",
-        "ensure this value has at least": "must have at least",
-        "ensure this value has at most": "must have at most"
-    }
-    
-    user_friendly_errors = []
-    for error in exc.errors():
-        field_path = error["loc"]
-        field_name = str(field_path[-1]) if field_path else "Field"
-        
-        # Get user-friendly field name
-        friendly_field = field_mapping.get(field_name, field_name.replace("_", " ").title())
-        
-        # Get user-friendly error message
-        original_msg = error.get("msg", "")
-        friendly_msg = original_msg
-        
-        for tech_msg, user_msg in message_mapping.items():
-            if tech_msg in original_msg.lower():
-                friendly_msg = user_msg
-                break
-        
-        # Special cases for specific validations
-        if "value_error.email" in error.get("type", ""):
-            friendly_msg = "must be a valid email address"
-        elif "value_error.any_str.min_length" in error.get("type", ""):
-            friendly_msg = f"must be at least {error.get('ctx', {}).get('limit_value', 'X')} characters"
-        elif "value_error.any_str.max_length" in error.get("type", ""):
-            friendly_msg = f"must be no more than {error.get('ctx', {}).get('limit_value', 'X')} characters"
-        
-        user_friendly_errors.append(f"{friendly_field} {friendly_msg}")
-    
-    # Create a user-friendly main message based on the endpoint
-    endpoint = str(request.url.path)
-    if "login" in endpoint:
-        main_message = "Login information is incomplete or invalid"
-        hint = "Please make sure you've entered your username, password, and selected your account type (Buyer or Seller)"
-    elif "register" in endpoint:
-        main_message = "Registration information is incomplete or invalid"
-        hint = "Please fill in all required fields: username, email, full name, phone number, password, and account type"
-    else:
-        main_message = "Please check the information you've entered"
-        hint = "Make sure all required fields are filled in correctly"
-    
-    return JSONResponse(
-        status_code=422,
-        content={
-            "success": False,
-            "message": main_message,
-            "errors": user_friendly_errors,
-            "hint": hint
-        }
-    )
-
 # Mount static files (keep existing demo)
 demo_path = Path(__file__).parent.parent / "demo"
 if demo_path.exists():
@@ -230,45 +128,13 @@ react_path = Path(__file__).parent.parent / "frontend"
 if react_path.exists():
     app.mount("/react", StaticFiles(directory=str(react_path)), name="frontend")
 
-# Serve main HTML files directly
-@app.get("/")
-async def root():
-    """Serve the main landing page"""
-    frontend_path = Path(__file__).parent.parent / "frontend" / "index.html"
-    if frontend_path.exists():
-        return FileResponse(frontend_path)
-    raise HTTPException(status_code=404, detail="Frontend not found")
-
-@app.get("/seller-portal.html")
-async def seller_portal():
-    """Serve the seller portal page"""
-    frontend_path = Path(__file__).parent.parent / "frontend" / "seller-portal.html"
-    if frontend_path.exists():
-        return FileResponse(frontend_path)
-    raise HTTPException(status_code=404, detail="Seller portal not found")
-
-@app.get("/react-app.html") 
-async def buyer_portal():
-    """Serve the buyer portal page"""
-    frontend_path = Path(__file__).parent.parent / "frontend" / "react-app.html"
-    if frontend_path.exists():
-        return FileResponse(frontend_path)
-    raise HTTPException(status_code=404, detail="Buyer portal not found")
-
 # Initialize services
 db = JSONDatabase()
-ai_service = GeminiOnlyService()  # Legacy service for fallback
+ai_service = GeminiOnlyService()
 manager = ConnectionManager()
 session_manager = AdvancedSessionManager(db)
 market_intelligence = MarketIntelligence()
 auth_service = AuthenticationService()
-
-# Initialize enhanced AI services with LangChain + MCP
-enhanced_ai_service = EnhancedAIService(use_langchain=True, use_mcp=False)
-mcp_server = None
-
-# Update session manager with enhanced AI service
-session_manager.enhanced_ai_service = enhanced_ai_service
 
 # Global storage for active connections
 active_connections: Dict[str, Dict] = {}
@@ -338,65 +204,25 @@ async def health_check():
         # Test database
         products = await db.get_products()
         
-        # Test AI services
+        # Test AI service
         ai_available = ai_service.model is not None
-        ai_status = enhanced_ai_service.get_service_status()
         
         return {
             "status": "healthy",
             "database": "connected",
-            "legacy_ai_service": "available" if ai_available else "fallback_mode",
-            "enhanced_ai_service": ai_status,
+            "ai_service": "available" if ai_available else "fallback_mode",
             "products_count": len(products),
             "active_sessions": len(session_manager.active_sessions)
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
 
-@app.get("/api/ai/status")
-async def ai_service_status():
-    """Detailed AI service status and performance metrics"""
-    return enhanced_ai_service.get_service_status()
-
-
-# ===== ROOT AND UTILITY ENDPOINTS =====
-
-@app.get("/")
-async def root():
-    """Redirect to seller portal"""
-    from fastapi.responses import RedirectResponse
-    return RedirectResponse(url="/react/seller-portal.html")
-
-@app.get("/seller-portal")
-async def seller_portal_redirect():
-    """Redirect to seller portal"""
-    from fastapi.responses import RedirectResponse
-    return RedirectResponse(url="/react/seller-portal.html")
-
-@app.get("/react-app.html")
-async def buyer_portal():
-    """Serve buyer portal directly"""
-    buyer_portal_path = Path(__file__).parent.parent / "frontend" / "react-app.html"
-    if buyer_portal_path.exists():
-        return FileResponse(buyer_portal_path)
-    else:
-        raise HTTPException(status_code=404, detail="Buyer portal not found")
 
 # ===== AUTHENTICATION ENDPOINTS =====
 
-@app.get("/api/auth/roles")
-async def get_user_roles():
-    """Get available user roles"""
-    return {
-        "roles": [
-            {"value": UserRole.BUYER, "label": "Buyer"},
-            {"value": UserRole.SELLER, "label": "Seller"}
-        ]
-    }
-
 @app.post("/api/auth/register")
 async def register_user(user_data: UserRegistration):
-    """Register a new user and automatically log them in"""
+    """Register a new user"""
     try:
         result = await auth_service.register_user(
             username=user_data.username,
@@ -404,91 +230,33 @@ async def register_user(user_data: UserRegistration):
             password=user_data.password,
             full_name=user_data.full_name,
             phone=user_data.phone,
-            role=user_data.role.value
+            role=user_data.role
         )
         
         if result["success"]:
-            # Auto-login after successful registration
-            try:
-                login_result = await auth_service.login_user(
-                    username=user_data.username,
-                    password=user_data.password,
-                    role=user_data.role.value
-                )
-                
-                if login_result["success"]:
-                    return {
-                        "success": True,
-                        "message": "Registration and login successful",
-                        "user": login_result["user"],
-                        "token": login_result["token"],
-                        "session_id": login_result["session_id"],
-                        "auto_login": True
-                    }
-                else:
-                    # Registration successful but auto-login failed
-                    return {
-                        "success": True,
-                        "message": "Registration successful, please login manually",
-                        "user": result.get("user"),
-                        "user_id": result["user_id"],
-                        "auto_login": False
-                    }
-            except Exception as login_error:
-                logger.error(f"Auto-login after registration failed: {str(login_error)}")
-                # Registration successful but auto-login failed
-                return {
-                    "success": True,
-                    "message": "Registration successful, please login manually",
-                    "user": result.get("user"),
-                    "user_id": result["user_id"],
-                    "auto_login": False
-                }
+            return {
+                "success": True,
+                "message": "User registered successfully",
+                "user_id": result["user_id"]
+            }
         else:
-            # Provide user-friendly error messages for registration
-            error_message = result.get("message", "Registration failed")
+            raise HTTPException(status_code=400, detail=result["message"])
             
-            # Map common technical errors to user-friendly messages  
-            if "username already exists" in error_message.lower() or "already taken" in error_message.lower():
-                user_friendly_message = "This username is already taken. Please choose a different username."
-            elif "email already exists" in error_message.lower() or "email.*already" in error_message.lower():
-                user_friendly_message = "An account with this email already exists. Please use a different email or try logging in."
-            elif "phone" in error_message.lower() and "invalid" in error_message.lower():
-                user_friendly_message = "Please enter a valid phone number with at least 10 digits."
-            elif "password" in error_message.lower() and ("short" in error_message.lower() or "weak" in error_message.lower()):
-                user_friendly_message = "Password must be at least 6 characters long."
-            else:
-                user_friendly_message = error_message
-                
-            raise HTTPException(
-                status_code=400, 
-                detail={
-                    "success": False,
-                    "message": user_friendly_message,
-                    "hint": "Please check all your information and try again."
-                }
-            )
-    except HTTPException:
-        raise  
     except Exception as e:
         logger.error(f"Registration error: {str(e)}")
-        raise HTTPException(
-            status_code=500, 
-            detail={
-                "success": False,
-                "message": "We're having trouble creating your account right now. Please try again in a moment.",
-                "hint": "If the problem persists, please contact support."
-            }
-        )
+        raise HTTPException(status_code=500, detail="Registration failed")
 
 @app.post("/api/auth/login")
 async def login_user(user_credentials: UserLogin):
-    """Login user and create session"""
+    """Login user and create session (handles both buyers and sellers)"""
     try:
+        # Make role optional for backward compatibility
+        role = getattr(user_credentials, 'role', None)
+        
         result = await auth_service.login_user(
             username=user_credentials.username,
             password=user_credentials.password,
-            role=user_credentials.role.value
+            role=role
         )
         
         if result["success"]:
@@ -500,42 +268,13 @@ async def login_user(user_credentials: UserLogin):
                 "session_id": result["session_id"]
             }
         else:
-            # Provide user-friendly error messages
-            error_message = result.get("message", "Login failed")
-            
-            # Map common technical errors to user-friendly messages
-            if "user not found" in error_message.lower():
-                user_friendly_message = "Username not found. Please check your username or register if you don't have an account."
-            elif "incorrect password" in error_message.lower() or "invalid password" in error_message.lower():
-                user_friendly_message = "Incorrect password. Please check your password and try again."
-            elif "invalid credentials" in error_message.lower():
-                user_friendly_message = "Invalid username or password. Please check your credentials and try again."
-            elif "role" in error_message.lower():
-                user_friendly_message = "Please select whether you're logging in as a Buyer or Seller."
-            else:
-                user_friendly_message = error_message
-                
-            raise HTTPException(
-                status_code=401, 
-                detail={
-                    "success": False,
-                    "message": user_friendly_message,
-                    "hint": "Make sure you're using the correct username, password, and account type."
-                }
-            )
+            raise HTTPException(status_code=401, detail=result["message"])
             
     except HTTPException:
-        raise 
+        raise
     except Exception as e:
         logger.error(f"Login error: {str(e)}")
-        raise HTTPException(
-            status_code=500, 
-            detail={
-                "success": False,
-                "message": "We're having trouble logging you in right now. Please try again in a moment.",
-                "hint": "If the problem persists, please contact support."
-            }
-        )
+        raise HTTPException(status_code=500, detail="Login failed")
 
 @app.post("/api/auth/logout")
 async def logout_user(logout_data: LogoutRequest):
@@ -594,121 +333,7 @@ async def update_user_profile(user_id: str, profile_data: UserProfileUpdate):
         logger.error(f"Profile update error: {str(e)}")
         raise HTTPException(status_code=500, detail="Profile update failed")
 
-@app.get("/api/auth/validate-session/{session_id}")
-async def validate_session(session_id: str):
-    """Validate session and return user info if valid"""
-    try:
-        result = await auth_service.validate_session(session_id)
-        
-        if result["success"]:
-            return {
-                "success": True,
-                "user": result["user"],
-                "session": result["session"]
-            }
-        else:
-            raise HTTPException(status_code=401, detail=result["message"])
-            
-    except HTTPException:
-        raise 
-    except Exception as e:
-        logger.error(f"Session validation error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Session validation failed")
-
 # ===== NEGOTIATION ENDPOINTS =====
-
-@app.post("/api/debug-demo-negotiate")
-async def debug_demo_negotiate(request: URLNegotiationRequest, background_tasks: BackgroundTasks):
-    """Debug demo negotiation endpoint without authentication (for testing)"""
-    logger.info(f"[DEBUG] Starting debug demo negotiation...")
-    try:
-        # Create demo product data based on the URL pattern
-        url = request.product_url.lower()
-        
-        if 'laptop' in url or 'macbook' in url or 'computer' in url:
-            demo_title = "MacBook Air M2 - Excellent Condition"
-            demo_price = 85000
-            demo_description = "MacBook Air with M2 chip, 8GB RAM, 256GB SSD. Barely used, perfect condition."
-        elif 'phone' in url or 'mobile' in url or 'iphone' in url:
-            demo_title = "iPhone 14 Pro - Like New"
-            demo_price = 65000
-            demo_description = "iPhone 14 Pro 128GB, space black. Mint condition with original accessories."
-        elif 'furniture' in url or 'sofa' in url or 'chair' in url:
-            demo_title = "Modern Office Furniture Set"
-            demo_price = 25000
-            demo_description = "Complete office furniture set including desk, chair, and storage. Excellent quality."
-        else:
-            demo_title = "Premium Product - Great Deal"
-            demo_price = 45000
-            demo_description = "High-quality product in excellent condition. Perfect for your needs."
-        
-        # Create demo product
-        demo_product = Product(
-            id=str(uuid.uuid4()),
-            title=demo_title,
-            description=demo_description,
-            price=demo_price,
-            original_price=int(demo_price * 1.4),  # 40% higher original price
-            seller_name="Demo Seller",
-            seller_contact="Contact via platform",
-            location="Bangalore, Karnataka",
-            category="Electronics",
-            condition="Excellent",
-            url=request.product_url,  # Add this field
-            platform="Demo",  # Add this field
-            images=[],  # Add this field
-            features=[],  # Add this field
-            posted_date=datetime.now(),  # Add this field
-        )
-        
-        logger.info(f"[DEBUG] Created demo product: {demo_product.id}")
-        
-        # Store in database
-        await db.add_product(demo_product)
-        logger.info(f"[DEBUG] Product stored in database")
-        
-        # Create negotiation parameters
-        params = NegotiationParams(
-            product_id=demo_product.id,
-            target_price=request.target_price,
-            max_budget=request.max_budget,
-            approach=request.approach,
-            timeline=request.timeline,
-            special_requirements=request.special_requirements
-        )
-        
-        logger.info(f"[DEBUG] Created negotiation params")
-        
-        # Create session
-        session = await session_manager.create_session(demo_product, params)
-        logger.info(f"[DEBUG] Created session: {session.session_id}")
-        logger.info(f"[DEBUG] Active sessions now: {list(session_manager.active_sessions.keys())}")
-        
-        # Start background negotiation
-        background_tasks.add_task(auto_start_negotiation, session.session_id)
-        
-        return {
-            "success": True,
-            "session": {
-                "session_id": session.session_id,
-                "product_info": demo_product.dict()
-            },
-            "product_info": demo_product.dict(),
-            "market_analysis": {
-                "average_price": demo_price,
-                "price_range": {"min": int(demo_price * 0.8), "max": int(demo_price * 1.2)},
-                "market_trend": "stable"
-            },
-            "message": "Debug demo negotiation session created! AI is ready to negotiate.",
-            "demo_mode": True
-        }
-        
-    except Exception as e:
-        logger.error(f"Error in debug demo negotiate: {e}")
-        return {
-            "success": False,
-            "message": f"Debug demo setup failed: {str(e)}"
-        }
 
 @app.post("/api/demo-negotiate")
 async def demo_negotiate(request: URLNegotiationRequest, background_tasks: BackgroundTasks, current_user: dict = Depends(get_current_buyer)):
@@ -833,21 +458,21 @@ async def start_negotiation_from_url(request: URLNegotiationRequest, background_
         session_id = session_result['session_id']
         background_tasks.add_task(auto_start_negotiation, session_id)
         
-        # Return response in format expected by frontend
-        product_info = session_result['product'].dict() if session_result.get('product') else {
-            "title": "Product from marketplace",
-            "price": request.target_price,
-            "platform": "Marketplace"
-        }
-        
         return {
             "success": True,
-            "session_id": session_id,
             "session": {
-                "session_id": session_id
+                "session_id": session_id,
+                "product_info": session_result['product'].dict() if session_result.get('product') else {
+                    "title": "Product from marketplace",
+                    "price": request.target_price,
+                    "platform": "Marketplace"
+                }
             },
-            "product": product_info,
-            "product_info": product_info,
+            "product_info": session_result['product'].dict() if session_result.get('product') else {
+                "title": "Product from marketplace", 
+                "price": request.target_price,
+                "platform": "Marketplace"
+            },
             "market_analysis": session_result.get('market_analysis', {}),
             "strategy": session_result.get('strategy', {}),
             "message": "Negotiation session created! AI analysis complete - ready to negotiate."
@@ -881,15 +506,8 @@ async def analyze_market_price(request: URLNegotiationRequest):
     Get comprehensive market analysis for a product URL without starting negotiation
     """
     try:
-        # Use enhanced scraper for better results
-        scraping_method = getattr(request, 'scraping_method', 'enhanced')
-        
-        if scraping_method == 'enhanced':
-            async with EnhancedMarketplaceScraper() as scraper:
-                product_data = await scraper.scrape_product(request.product_url)
-        else:
-            async with MarketplaceScraper() as scraper:
-                product_data = await scraper.scrape_product(request.product_url)
+        async with MarketplaceScraper() as scraper:
+            product_data = await scraper.scrape_product(request.product_url)
         
         if not product_data:
             raise HTTPException(status_code=400, detail="Could not scrape product information")
@@ -959,7 +577,7 @@ async def websocket_user_endpoint(websocket: WebSocket, session_id: str):
                 "data": {
                     "phase": session_data.get('phase', 'unknown'),
                     "messages_count": len(session_data['session'].messages),
-                    "product": session_data['product'].model_dump(mode='json'),
+                    "product": session_data['product'].dict(),
                     "market_analysis": session_data.get('market_analysis', {})
                 }
             })
@@ -988,16 +606,11 @@ async def websocket_seller_endpoint(websocket: WebSocket, session_id: str):
         while True:
             # Listen for seller messages
             data = await websocket.receive_text()
-            logger.info(f"[DEBUG] Seller WebSocket received data: {data}")
             message_data = json.loads(data)
-            logger.info(f"[DEBUG] Parsed message data: {message_data}")
             
             # Process seller message with advanced negotiation engine
             if message_data.get('type') == 'message':
-                logger.info(f"[DEBUG] Processing message type 'message' with content: {message_data.get('content', '')}")
                 await handle_advanced_seller_message(session_id, message_data.get('content', ''))
-            else:
-                logger.warning(f"[DEBUG] Unknown message type: {message_data.get('type')}")
                 
     except WebSocketDisconnect:
         manager.disconnect_seller(session_id)
@@ -1013,29 +626,19 @@ async def websocket_seller_endpoint(websocket: WebSocket, session_id: str):
 async def handle_advanced_seller_message(session_id: str, seller_message: str):
     """Handle seller message with advanced negotiation processing"""
     try:
-        logger.info(f"[DEBUG] handle_advanced_seller_message called with session_id: {session_id}, message: {seller_message}")
-        logger.info(f"[DEBUG] Active sessions: {list(session_manager.active_sessions.keys())}")
-        
         if session_id not in session_manager.active_sessions:
-            logger.warning(f"Session {session_id} not found in active sessions. Available sessions: {list(session_manager.active_sessions.keys())}")
-            
-            # Send error to seller
-            await manager.send_to_seller(session_id, {
-                "type": "error",
-                "message": "Session not found. Please start a negotiation from the buyer side first."
-            })
+            logger.warning(f"Session {session_id} not found in active sessions")
             return
         
         logger.info(f"Processing seller message in session {session_id}: {seller_message[:100]}...")
         
         # Process through advanced session manager
         result = await session_manager.process_seller_response(session_id, seller_message)
-        logger.info(f"[DEBUG] Session manager returned result: {result}")
         
         # Send seller message to user for monitoring
         await manager.send_to_user(session_id, {
             "type": "seller_message",
-            "message": seller_message,
+            "content": seller_message,
             "timestamp": datetime.now().isoformat()
         })
         
@@ -1084,7 +687,7 @@ async def handle_advanced_seller_message(session_id: str, seller_message: str):
             # Send AI response and analysis to user
             await manager.send_to_user(session_id, {
                 "type": "ai_response",
-                "message": ai_response,
+                "content": ai_response,
                 "decision": result.get('decision', {}),
                 "tactics_used": result.get('tactics_used', []),
                 "phase": result.get('phase'),
@@ -1251,6 +854,123 @@ async def start_negotiation_legacy(params: NegotiationParams):
 
 
 # ===============================
+# AUTHENTICATION ENDPOINTS
+# ===============================
+
+@app.post("/api/auth/register")
+async def register_seller(user_data: UserRegistration):
+    """Register a new seller"""
+    try:
+        result = auth_service.register_seller(
+            username=user_data.username,
+            email=user_data.email,
+            password=user_data.password,
+            full_name=user_data.full_name,
+            phone=user_data.phone
+        )
+        
+        if result['success']:
+            return {
+                "success": True,
+                "message": result['message'],
+                "user_id": result['user_id']
+            }
+        else:
+            raise HTTPException(status_code=400, detail=result['error'])
+            
+    except Exception as e:
+        logger.error(f"Registration error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Registration failed")
+
+
+# Legacy seller login endpoint - consolidated into main login above
+# This section has been removed to prevent endpoint conflicts
+
+
+@app.post("/api/auth/logout")
+async def logout_seller(logout_request: LogoutRequest):
+    """Logout seller and invalidate session"""
+    try:
+        result = auth_service.logout_seller(logout_request.session_id)
+        return result
+    except Exception as e:
+        logger.error(f"Logout error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Logout failed")
+
+
+@app.get("/api/auth/profile")
+async def get_seller_profile(authorization: str = None):
+    """Get current seller profile"""
+    try:
+        if not authorization or not authorization.startswith('Bearer '):
+            raise HTTPException(status_code=401, detail="Invalid authorization header")
+        
+        token = authorization[7:]  # Remove 'Bearer ' prefix
+        user = auth_service.get_current_user(token)
+        
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid or expired token")
+        
+        return {"success": True, "user": user}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Profile retrieval error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Profile retrieval failed")
+
+
+@app.put("/api/auth/profile")
+async def update_seller_profile(profile_data: UserProfileUpdate, authorization: str = None):
+    """Update seller profile"""
+    try:
+        if not authorization or not authorization.startswith('Bearer '):
+            raise HTTPException(status_code=401, detail="Invalid authorization header")
+        
+        token = authorization[7:]
+        user = auth_service.get_current_user(token)
+        
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid or expired token")
+        
+        result = auth_service.update_seller_profile(
+            user_id=user['user_id'],
+            profile_data=profile_data.dict(exclude_unset=True)
+        )
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Profile update error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Profile update failed")
+
+
+@app.get("/api/auth/stats/{user_id}")
+async def get_seller_stats(user_id: str, authorization: str = None):
+    """Get seller statistics"""
+    try:
+        if not authorization or not authorization.startswith('Bearer '):
+            raise HTTPException(status_code=401, detail="Invalid authorization header")
+        
+        token = authorization[7:]
+        current_user = auth_service.get_current_user(token)
+        
+        if not current_user or current_user['user_id'] != user_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        result = auth_service.get_seller_stats(user_id)
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Stats retrieval error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Stats retrieval failed")
+
+
+# ===============================
 # ANALYTICS AND REPORTING
 # ===============================
 
@@ -1262,17 +982,9 @@ async def get_session_details(session_id: str):
             session_data = session_manager.active_sessions[session_id]
             session = session_data['session']
             
-            # Ensure proper serialization of session and user_params
-            session_dict = session.dict()
-            
-            # Debug logging
-            logger.info(f"Session dict for {session_id}: {session_dict}")
-            logger.info(f"User params: {session_dict.get('user_params')}")
-            
             return {
-                "success": True,
-                "session": session_dict,
-                "product": session_data['product'].dict() if hasattr(session_data['product'], 'dict') else session_data['product'],
+                "session": session.dict(),
+                "product": session_data['product'].dict(),
                 "market_analysis": session_data.get('market_analysis', {}),
                 "strategy": session_data.get('strategy', {}),
                 "performance_metrics": session_data.get('performance_metrics', {}),
@@ -1283,14 +995,9 @@ async def get_session_details(session_id: str):
             session = await db.get_session(session_id)
             if not session:
                 raise HTTPException(status_code=404, detail="Session not found")
-            return {
-                "success": True,
-                "session": session.dict() if hasattr(session, 'dict') else session, 
-                "status": "completed"
-            }
+            return {"session": session, "status": "completed"}
             
     except Exception as e:
-        logger.error(f"Error getting session details: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -1314,80 +1021,6 @@ async def get_performance_analytics():
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/debug/sessions")
-def debug_list_sessions():
-    """Debug: List all active sessions"""
-    return {
-        "active_sessions": list(session_manager.active_sessions.keys()),
-        "session_count": len(session_manager.active_sessions),
-        "session_details": {
-            session_id: {
-                "user_websocket": session_data.get("user_websocket") is not None,
-                "seller_websocket": session_data.get("seller_websocket") is not None,
-                "created": session_data.get("created_at", "unknown")
-            }
-            for session_id, session_data in session_manager.active_sessions.items()
-        }
-    }
-
-@app.get("/api/session/{session_id}/details")
-def get_session_details(session_id: str):
-    """Get session details for seller interface"""
-    if session_id not in session_manager.active_sessions:
-        raise HTTPException(status_code=404, detail="Session not found")
-    
-    session_data = session_manager.active_sessions[session_id]
-    
-    # Extract product details
-    product = session_data.get("product")
-    product_details = {}
-    if product:
-        if hasattr(product, 'dict'):
-            product_details = product.dict()
-        else:
-            product_details = {
-                "title": getattr(product, 'title', 'Unknown Product'),
-                "price": getattr(product, 'price', 0),
-                "original_price": getattr(product, 'original_price', 0),
-                "description": getattr(product, 'description', ''),
-                "location": getattr(product, 'location', ''),
-                "condition": getattr(product, 'condition', ''),
-                "seller_name": getattr(product, 'seller_name', ''),
-                "url": getattr(product, 'url', '')
-            }
-    
-    # Extract user parameters from session object
-    session_obj = session_data.get("session")
-    user_params = session_obj.user_params if session_obj and hasattr(session_obj, 'user_params') else session_data.get("user_params", {})
-    
-    # Handle user_params as either dict or NegotiationParams object
-    if hasattr(user_params, 'target_price'):
-        target_price = user_params.target_price
-        max_budget = user_params.max_budget
-        user_preferences = user_params.dict() if hasattr(user_params, 'dict') else {}
-    else:
-        target_price = user_params.get("target_price")
-        max_budget = user_params.get("max_budget")
-        user_preferences = user_params
-    
-
-    
-    return {
-        "session_id": session_id,
-        "product_details": product_details,
-        "target_price": target_price,
-        "max_budget": max_budget,
-        "user_preferences": user_preferences,
-        "negotiation_status": session_data.get("status", "active"),
-        "chat_history": session_data.get("chat_history", []),
-        "created_at": session_data.get("created_at"),
-        "is_connected": {
-            "buyer": session_data.get("user_websocket") is not None,
-            "seller": session_data.get("seller_websocket") is not None
-        }
-    }
 
 
 if __name__ == "__main__":

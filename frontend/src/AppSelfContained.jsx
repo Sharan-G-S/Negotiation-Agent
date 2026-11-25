@@ -241,10 +241,7 @@ const MessageBubble = ({ message }) => {
       <div className={styles.avatar}>
         {message.type === 'ai' || message.type === 'ai_message' ? 
           <Bot className="w-5 h-5" /> : 
-          message.type === 'system' ? 
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-          </svg> : 
+          message.type === 'system' ? '⚡' : 
           <User className="w-5 h-5" />
         }
       </div>
@@ -458,7 +455,7 @@ const ChatInterface = ({ messages, isNegotiating, onSendMessage, sessionId }) =>
 };
 
 // Sidebar Component
-const Sidebar = ({ formData, onFormDataChange, onStartNegotiation, onStartDemo, onReset, isNegotiating, sessionId, onCopySessionId }) => {
+const Sidebar = ({ formData, onFormDataChange, onStartNegotiation, onStartDemo, onReset, isNegotiating, sessionInfo }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -658,19 +655,11 @@ const Sidebar = ({ formData, onFormDataChange, onStartNegotiation, onStartDemo, 
       </div>
 
       {/* Session Status */}
-      {sessionId && (
+      {sessionInfo && (
         <div className="p-4 bg-gray-800 border-t border-gray-700">
           <div className="text-sm">
             <div className="font-medium text-blue-400 mb-1">Session Active</div>
-            <div className="text-gray-300 mb-2 break-all">
-              Session ID: {sessionId}
-            </div>
-            <button
-              onClick={onCopySessionId}
-              className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors duration-200"
-            >
-              Copy Session ID
-            </button>
+            <div className="text-gray-300">{sessionInfo}</div>
           </div>
         </div>
       )}
@@ -828,16 +817,9 @@ function AppSelfContained() {
     }
   };
 
-  const copySessionId = async () => {
-    if (state.sessionId) {
-      try {
-        await navigator.clipboard.writeText(state.sessionId);
-        showToast('Session ID copied to clipboard!', 'success');
-      } catch (err) {
-        showToast('Failed to copy session ID', 'error');
-      }
-    }
-  };
+  const sessionInfo = state.sessionId ? 
+    `Session ID: ${state.sessionId.substring(0, 8)}...` : 
+    null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -850,8 +832,7 @@ function AppSelfContained() {
           onStartDemo={handleStartDemo}
           onReset={handleReset}
           isNegotiating={state.isNegotiating}
-          sessionId={state.sessionId}
-          onCopySessionId={copySessionId}
+          sessionInfo={sessionInfo}
         />
 
         {/* Main Content */}

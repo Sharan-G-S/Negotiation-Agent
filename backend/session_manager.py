@@ -13,7 +13,6 @@ import logging
 from models import NegotiationSession, ChatMessage, Product, NegotiationParams
 from database import JSONDatabase
 from scraper_service import MarketplaceScraper, MarketIntelligence
-from enhanced_scraper import EnhancedMarketplaceScraper
 from negotiation_engine import AdvancedNegotiationEngine, NegotiationPhase
 
 logger = logging.getLogger(__name__)
@@ -45,14 +44,13 @@ class InterventionTrigger(Enum):
 class AdvancedSessionManager:
     """Manages complete negotiation session lifecycle"""
     
-    def __init__(self, db: JSONDatabase, enhanced_ai_service=None):
+    def __init__(self, db: JSONDatabase):
         self.db = db
         self.active_sessions: Dict[str, Dict] = {}
         self.negotiation_engine = AdvancedNegotiationEngine()
         self.market_intelligence = MarketIntelligence()
         self.session_analytics = SessionAnalytics()
         self.learning_engine = LearningEngine()
-        self.enhanced_ai_service = enhanced_ai_service  # Enhanced AI service for intelligent negotiation
     
     async def create_session_from_url(self, product_url: str, params: NegotiationParams) -> Dict[str, Any]:
         """
@@ -64,32 +62,17 @@ class AdvancedSessionManager:
             # Step 1: Scrape product information
             logger.info(f"Scraping product from URL: {product_url}")
             
-            # Use enhanced scraper for better success rate
-            async with EnhancedMarketplaceScraper() as scraper:
+            async with MarketplaceScraper() as scraper:
                 product_data = await scraper.scrape_product(product_url)
             
-            if not product_data or not isinstance(product_data, dict):
+            if not product_data:
                 raise ValueError("Could not scrape product information from URL")
             
             # Step 2: Comprehensive market intelligence and product analysis
             logger.info("Performing comprehensive product analysis...")
-            try:
-                market_analysis = await self.market_intelligence.comprehensive_product_analysis(
-                    product_data, params.target_price, params.max_budget
-                )
-            except Exception as e:
-                logger.warning(f"Comprehensive analysis failed, using fallback: {e}")
-                # Create basic market analysis if comprehensive fails
-                market_analysis = {
-                    'market_analysis': {'estimated_value': product_data.get('price', params.max_budget)},
-                    'condition_analysis': {'score': 0.7},
-                    'price_justification': {'is_reasonable': True},
-                    'negotiation_points': {'key_points': ['Product condition', 'Market price']},
-                    'strategy': {'approach': 'conservative', 'success_probability': 0.6},
-                    'risk_assessment': {'level': 'medium'},
-                    'confidence_score': 0.6,
-                    'recommended_actions': ['Start with polite inquiry', 'Present reasonable offer']
-                }
+            market_analysis = await self.market_intelligence.comprehensive_product_analysis(
+                product_data, params.target_price, params.max_budget
+            )
             
             # Step 3: Create Product object
             product = Product(
@@ -104,9 +87,6 @@ class AdvancedSessionManager:
             strategy_data = await self._formulate_initial_strategy(
                 product, params, market_analysis
             )
-            
-            # Step 5.5: Update params with correct product_id
-            params.product_id = product.id
             
             # Step 6: Create negotiation session
             session = NegotiationSession(
@@ -239,29 +219,10 @@ class AdvancedSessionManager:
             if intervention:
                 return await self._trigger_human_handoff(session_id, intervention)
             
-            # Generate AI response using enhanced AI service (LangChain + MCP) or fallback to engine
-            if self.enhanced_ai_service:
-                negotiation_result = await self.enhanced_ai_service.make_negotiation_decision(
-                    session_data, seller_message, session.messages, product
-                )
-                # Convert to expected format
-                negotiation_result = {
-                    'response': negotiation_result['response'],
-                    'confidence': negotiation_result['confidence'],
-                    'tactics_used': negotiation_result['tactics_used'],
-                    'phase': session_data.get('phase', 'exploration'),
-                    'decision': {
-                        'action': negotiation_result.get('action_type', 'respond'),
-                        'reasoning': negotiation_result.get('reasoning', ''),
-                        'source': negotiation_result.get('source', 'enhanced_ai')
-                    },
-                    'seller_analysis': negotiation_result.get('mcp_insights', {}).get('seller_behavior', {})
-                }
-            else:
-                # Fallback to original negotiation engine
-                negotiation_result = await self.negotiation_engine.process_negotiation_turn(
-                    session_data, seller_message, session.messages, product
-                )
+            # Generate AI response using advanced engine
+            negotiation_result = await self.negotiation_engine.process_negotiation_turn(
+                session_data, seller_message, session.messages, product
+            )
             
             # Create AI response message
             ai_message = ChatMessage(

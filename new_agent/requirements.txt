@@ -1,0 +1,42 @@
+# AI Negotiation Agent - Requirements
+# Complete dependencies for the new agent system
+
+# Core AI and LangChain
+langchain>=0.1.0
+langchain-google-genai>=1.0.0
+langchain-community>=0.0.20
+google-generativeai>=0.3.0
+
+# Data Processing and Validation
+pydantic>=2.0.0
+python-dotenv>=1.0.0
+
+# Async and Concurrency
+asyncio-mqtt>=0.13.0
+aiofiles>=23.0.0
+
+# Web and API
+fastapi>=0.100.0
+uvicorn>=0.23.0
+websockets>=11.0.0
+httpx>=0.24.0
+requests>=2.31.0
+
+# Data Storage and Serialization
+jsonlines>=3.1.0
+sqlite3  # Built-in
+
+# Development and Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+isort>=5.12.0
+
+# Logging and Monitoring
+structlog>=23.1.0
+prometheus-client>=0.17.0
+
+# Optional: For enhanced features
+# numpy>=1.24.0  # For numerical analysis
+# pandas>=2.0.0  # For data analysis
+# plotly>=5.15.0  # For visualization

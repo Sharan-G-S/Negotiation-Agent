@@ -1,0 +1,29 @@
+[
+  {
+    "id": "9cb220e4-7990-4281-9a20-0017e9b146ae",
+    "product_id": "scraped_9cb220e4-7990-4281-9a20-0017e9b146ae",
+    "user_params": {
+      "product_id": "",
+      "target_price": 50000,
+      "max_budget": 55000,
+      "approach": "assertive",
+      "timeline": "urgent",
+      "special_requirements": "warranty"
+    },
+    "status": "active",
+    "created_at": "2025-09-25T15:14:42.511684",
+    "ended_at": null,
+    "messages": [
+      {
+        "id": "78e57b98-cce5-4d3c-adf7-5e8ca6cce95f",
+        "session_id": "9cb220e4-7990-4281-9a20-0017e9b146ae",
+        "sender": "ai",
+        "content": "I understand your position, but ₹55,000 is really the maximum I can go. If you change your mind, please let me know. Otherwise, I'll have to consider other options. Thank you for your time.",
+        "timestamp": "2025-09-25T15:14:44.518222",
+        "sender_type": "ai"
+      }
+    ],
+    "final_price": null,
+    "outcome": null
+  }
+]

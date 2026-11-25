@@ -10,11 +10,7 @@ import {
   Play,
   Sparkles,
   ArrowRight,
-  AlertCircle,
-  Settings,
-  Zap,
-  Palette,
-  Globe
+  AlertCircle
 } from 'lucide-react'
 import useNegotiationStore from '../hooks/useNegotiationStore'
 import apiService from '../services/api'
@@ -108,80 +104,57 @@ const Sidebar = () => {
   }
 
   const tabs = [
-    { id: 'negotiate', label: 'Negotiate', icon: Zap, color: 'from-primary-500 to-primary-700' },
-    { id: 'demo', label: 'Demo', icon: Sparkles, color: 'from-accent-500 to-accent-700' },
+    { id: 'negotiate', label: 'Start Negotiation', icon: Play },
+    { id: 'demo', label: 'Try Demo', icon: Sparkles },
   ]
 
-  const getStatusColor = () => {
-    switch (connectionStatus) {
-      case 'connected': return 'bg-emerald-500'
-      case 'connecting': return 'bg-amber-500 animate-pulse'
-      case 'error': return 'bg-red-500'
-      default: return 'bg-gray-500'
-    }
-  }
-
   return (
-    <div className="w-96 bg-gradient-to-br from-dark-900 via-dark-800 to-primary-900 text-white flex flex-col border-r border-primary-800/30 shadow-2xl">
-      {/* Header with gradient */}
-      <div className="relative p-6 border-b border-primary-700/30">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary-600/10 to-accent-600/10" />
-        
-        <div className="relative flex items-center gap-4 mb-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-lg">
-            <Settings className="w-6 h-6 text-white" />
+    <div className="w-96 bg-gradient-to-b from-dark-800 to-dark-900 text-white flex flex-col">
+      {/* Header */}
+      <div className="p-6 border-b border-gray-700">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
+            <Target className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="font-bold text-xl bg-gradient-to-r from-primary-300 to-accent-300 bg-clip-text text-transparent">
-              Control Center
-            </h2>
-            <p className="text-gray-300 text-sm">Configure your AI negotiation</p>
+            <h2 className="font-semibold text-lg">Control Panel</h2>
+            <p className="text-gray-400 text-sm">Configure your negotiation</p>
           </div>
         </div>
 
-        {/* Enhanced Status Indicator */}
-        <div className="relative flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/10 backdrop-blur-sm">
-          <div className={`w-3 h-3 rounded-full ${getStatusColor()}`} />
-          <span className="capitalize font-medium text-sm">{connectionStatus}</span>
-          {connectionStatus === 'connected' && (
-            <div className="ml-auto">
-              <Globe className="w-4 h-4 text-emerald-400" />
-            </div>
-          )}
+        {/* Status Indicator */}
+        <div className="flex items-center gap-2 text-sm">
+          <div className={`w-2 h-2 rounded-full ${
+            connectionStatus === 'connected' ? 'bg-green-500' :
+            connectionStatus === 'connecting' ? 'bg-yellow-500 animate-pulse' :
+            connectionStatus === 'error' ? 'bg-red-500' :
+            'bg-gray-500'
+          }`} />
+          <span className="capitalize">{connectionStatus}</span>
         </div>
       </div>
 
-      {/* Enhanced Tab Navigation */}
-      <div className="flex border-b border-primary-700/30 bg-gradient-to-r from-dark-800 to-dark-700">
+      {/* Tab Navigation */}
+      <div className="flex border-b border-gray-700">
         {tabs.map(tab => (
-          <motion.button
+          <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 px-4 py-4 text-sm font-semibold transition-all duration-300 relative overflow-hidden ${
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
               activeTab === tab.id
-                ? 'text-white'
-                : 'text-gray-300 hover:text-white'
+                ? 'bg-primary-600 text-white'
+                : 'text-gray-300 hover:text-white hover:bg-gray-700'
             }`}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
           >
-            {activeTab === tab.id && (
-              <motion.div
-                layoutId="activeTab"
-                className={`absolute inset-0 bg-gradient-to-r ${tab.color}`}
-                initial={false}
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              />
-            )}
-            <div className="relative flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2">
               <tab.icon className="w-4 h-4" />
               {tab.label}
             </div>
-          </motion.button>
+          </button>
         ))}
       </div>
 
-      {/* Enhanced Content */}
+      {/* Content */}
       <div className="flex-1 overflow-y-auto scrollbar-hide">
         <AnimatePresence mode="wait">
           {activeTab === 'negotiate' && (
@@ -190,47 +163,40 @@ const Sidebar = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3 }}
               className="p-6"
             >
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 {/* Product URL */}
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-primary-200">
+                <div>
+                  <label className="block text-sm font-medium mb-2 flex items-center gap-2">
                     <ExternalLink className="w-4 h-4" />
                     Product URL
                   </label>
-                  <div className="relative">
-                    <input
-                      type="url"
-                      {...register('productUrl', { 
-                        required: 'Product URL is required',
-                        pattern: {
-                          value: /^https?:\/\/.+/,
-                          message: 'Please enter a valid URL'
-                        }
-                      })}
-                      className="w-full px-4 py-3 bg-dark-800/50 border border-primary-600/30 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-400 backdrop-blur-sm transition-all duration-300"
-                      placeholder="https://www.olx.in/item/..."
-                      disabled={isNegotiating}
-                    />
-                    {errors.productUrl && (
-                      <motion.p 
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-red-400 text-xs mt-2 flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded-lg"
-                      >
-                        <AlertCircle className="w-3 h-3" />
-                        {errors.productUrl.message}
-                      </motion.p>
-                    )}
-                  </div>
+                  <input
+                    type="url"
+                    {...register('productUrl', { 
+                      required: 'Product URL is required',
+                      pattern: {
+                        value: /^https?:\/\/.+/,
+                        message: 'Please enter a valid URL'
+                      }
+                    })}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-400"
+                    placeholder="https://www.olx.in/item/..."
+                    disabled={isNegotiating}
+                  />
+                  {errors.productUrl && (
+                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      {errors.productUrl.message}
+                    </p>
+                  )}
                 </div>
 
                 {/* Price Inputs */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-primary-200">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 flex items-center gap-2">
                       <Target className="w-4 h-4" />
                       Target Price
                     </label>
@@ -240,17 +206,17 @@ const Sidebar = () => {
                         required: 'Target price is required',
                         min: { value: 1, message: 'Price must be greater than 0' }
                       })}
-                      className="w-full px-4 py-3 bg-dark-800/50 border border-primary-600/30 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-400 backdrop-blur-sm transition-all duration-300"
+                      className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-400"
                       placeholder="₹15,000"
                       disabled={isNegotiating}
                     />
                     {errors.targetPrice && (
-                      <p className="text-red-400 text-xs">{errors.targetPrice.message}</p>
+                      <p className="text-red-400 text-xs mt-1">{errors.targetPrice.message}</p>
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-primary-200">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 flex items-center gap-2">
                       <DollarSign className="w-4 h-4" />
                       Max Budget
                     </label>
@@ -260,58 +226,58 @@ const Sidebar = () => {
                         required: 'Max budget is required',
                         min: { value: 1, message: 'Budget must be greater than 0' }
                       })}
-                      className="w-full px-4 py-3 bg-dark-800/50 border border-primary-600/30 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-400 backdrop-blur-sm transition-all duration-300"
+                      className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-400"
                       placeholder="₹20,000"
                       disabled={isNegotiating}
                     />
                     {errors.maxBudget && (
-                      <p className="text-red-400 text-xs">{errors.maxBudget.message}</p>
+                      <p className="text-red-400 text-xs mt-1">{errors.maxBudget.message}</p>
                     )}
                   </div>
                 </div>
 
                 {/* Approach */}
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-primary-200">
+                <div>
+                  <label className="block text-sm font-medium mb-2 flex items-center gap-2">
                     <MessageSquare className="w-4 h-4" />
-                    Negotiation Style
+                    Negotiation Approach
                   </label>
                   <select
                     {...register('approach')}
-                    className="w-full px-4 py-3 bg-dark-800/50 border border-primary-600/30 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white backdrop-blur-sm transition-all duration-300"
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white"
                     disabled={isNegotiating}
                   >
-                    <option value="diplomatic">🤝 Diplomatic - Polite and professional</option>
-                    <option value="assertive">💪 Assertive - Direct and confident</option>
-                    <option value="considerate">🤗 Considerate - Patient and understanding</option>
+                    <option value="diplomatic">Diplomatic - Polite and professional</option>
+                    <option value="assertive">Assertive - Direct and confident</option>
+                    <option value="considerate">Considerate - Patient and understanding</option>
                   </select>
                 </div>
 
                 {/* Timeline */}
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-primary-200">
+                <div>
+                  <label className="block text-sm font-medium mb-2 flex items-center gap-2">
                     <Clock className="w-4 h-4" />
                     Purchase Timeline
                   </label>
                   <select
                     {...register('timeline')}
-                    className="w-full px-4 py-3 bg-dark-800/50 border border-primary-600/30 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white backdrop-blur-sm transition-all duration-300"
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white"
                     disabled={isNegotiating}
                   >
-                    <option value="flexible">⏰ Flexible - No rush</option>
-                    <option value="week">📅 Within a week</option>
-                    <option value="urgent">🚀 Urgent - ASAP</option>
+                    <option value="flexible">Flexible - No rush</option>
+                    <option value="week">Within a week</option>
+                    <option value="urgent">Urgent - ASAP</option>
                   </select>
                 </div>
 
                 {/* Special Requirements */}
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-primary-200">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
                     Special Requirements (Optional)
                   </label>
                   <textarea
                     {...register('specialRequirements')}
-                    className="w-full px-4 py-3 bg-dark-800/50 border border-primary-600/30 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-400 resize-none backdrop-blur-sm transition-all duration-300"
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-400 resize-none"
                     rows={3}
                     placeholder="Any specific requirements or preferences..."
                     disabled={isNegotiating}
@@ -323,22 +289,22 @@ const Sidebar = () => {
                   <motion.button
                     type="submit"
                     disabled={isSubmitting || isNegotiating}
-                    className={`w-full px-6 py-4 bg-gradient-to-r from-primary-600 to-accent-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 ${
-                      (isSubmitting || isNegotiating) ? 'opacity-50 cursor-not-allowed' : 'hover:from-primary-500 hover:to-accent-500'
+                    className={`w-full btn-primary flex items-center justify-center gap-2 ${
+                      (isSubmitting || isNegotiating) ? 'opacity-50 cursor-not-allowed' : ''
                     }`}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     {isSubmitting ? (
                       <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Initializing...
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Starting...
                       </>
                     ) : (
                       <>
-                        <Play className="w-5 h-5" />
-                        Start AI Negotiation
-                        <ArrowRight className="w-5 h-5" />
+                        <Play className="w-4 h-4" />
+                        Start Negotiation
+                        <ArrowRight className="w-4 h-4" />
                       </>
                     )}
                   </motion.button>
@@ -347,7 +313,7 @@ const Sidebar = () => {
                     <motion.button
                       type="button"
                       onClick={handleReset}
-                      className="w-full px-6 py-3 bg-red-600/20 border border-red-500/30 text-red-400 font-medium rounded-xl hover:bg-red-600/30 transition-all duration-300"
+                      className="w-full btn-secondary text-red-600 hover:text-red-700"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                     >
@@ -365,73 +331,61 @@ const Sidebar = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3 }}
               className="p-6"
             >
               <div className="text-center space-y-6">
-                <motion.div 
-                  className="w-24 h-24 bg-gradient-to-br from-accent-400 to-primary-600 rounded-2xl flex items-center justify-center mx-auto shadow-2xl"
-                  whileHover={{ rotate: 5, scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <Sparkles className="w-12 h-12 text-white" />
-                </motion.div>
+                <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto">
+                  <Sparkles className="w-10 h-10 text-white" />
+                </div>
                 
                 <div>
-                  <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-accent-300 to-primary-300 bg-clip-text text-transparent">
-                    Try Demo Mode
-                  </h3>
-                  <p className="text-gray-300 text-sm leading-relaxed">
+                  <h3 className="text-xl font-semibold mb-2">Try Demo Mode</h3>
+                  <p className="text-gray-400 text-sm leading-relaxed">
                     Experience NegotiBot AI with a simulated negotiation session. 
-                    Perfect for understanding how our AI works without using real product URLs.
+                    Perfect for understanding how the system works without using real product URLs.
                   </p>
                 </div>
 
-                <div className="bg-gradient-to-br from-dark-800/50 to-primary-900/50 rounded-xl p-6 text-left border border-primary-700/30 backdrop-blur-sm">
-                  <h4 className="font-semibold text-primary-300 mb-4 flex items-center gap-2">
-                    <Palette className="w-4 h-4" />
-                    Demo Features:
-                  </h4>
-                  <ul className="text-sm text-gray-300 space-y-3">
-                    {[
-                      'Realistic AI negotiation simulation',
-                      'Advanced response generation',
-                      'Market analysis insights',
-                      'Real-time chat interface',
-                      'Performance analytics'
-                    ].map((feature, index) => (
-                      <motion.li 
-                        key={index}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="flex items-center gap-3"
-                      >
-                        <div className="w-2 h-2 bg-gradient-to-r from-primary-400 to-accent-400 rounded-full" />
-                        {feature}
-                      </motion.li>
-                    ))}
+                <div className="bg-gray-800 rounded-lg p-4 text-left">
+                  <h4 className="font-medium text-primary-400 mb-3">Demo Features:</h4>
+                  <ul className="text-sm text-gray-300 space-y-2">
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-primary-500 rounded-full" />
+                      Realistic negotiation simulation
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-primary-500 rounded-full" />
+                      AI-powered response generation
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-primary-500 rounded-full" />
+                      Market analysis insights
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-primary-500 rounded-full" />
+                      Real-time chat interface
+                    </li>
                   </ul>
                 </div>
 
                 <motion.button
                   onClick={startDemo}
                   disabled={isNegotiating || isSubmitting}
-                  className={`w-full px-6 py-4 bg-gradient-to-r from-accent-600 to-primary-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 ${
-                    (isNegotiating || isSubmitting) ? 'opacity-50 cursor-not-allowed' : 'hover:from-accent-500 hover:to-primary-500'
+                  className={`w-full btn-primary flex items-center justify-center gap-2 ${
+                    (isNegotiating || isSubmitting) ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <Sparkles className="w-5 h-5" />
-                  Launch Demo Experience
-                  <ArrowRight className="w-5 h-5" />
+                  <Sparkles className="w-4 h-4" />
+                  Start Demo Negotiation
+                  <ArrowRight className="w-4 h-4" />
                 </motion.button>
 
                 {isNegotiating && (
                   <motion.button
                     onClick={handleReset}
-                    className="w-full px-6 py-3 bg-red-600/20 border border-red-500/30 text-red-400 font-medium rounded-xl hover:bg-red-600/30 transition-all duration-300"
+                    className="w-full btn-secondary text-red-400 hover:text-red-300"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                   >

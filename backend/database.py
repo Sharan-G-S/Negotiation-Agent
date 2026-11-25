@@ -172,7 +172,7 @@ class JSONDatabase:
         with open(self.products_file, 'w', encoding='utf-8') as f:
             json.dump(initial_products, f, indent=2, ensure_ascii=False)
         
-        print(f"[INFO] Created initial products database with {len(initial_products)} products")
+        print(f"✅ Created initial products database with {len(initial_products)} products")
     
     async def _create_initial_sessions(self):
         """Create initial sessions file"""
@@ -181,16 +181,13 @@ class JSONDatabase:
         with open(self.sessions_file, 'w', encoding='utf-8') as f:
             json.dump(initial_sessions, f, indent=2, ensure_ascii=False)
         
-        print("[INFO] Created initial sessions database")
+        print("✅ Created initial sessions database")
     
     async def get_products(self) -> List[Product]:
         """Get all products"""
         try:
             with open(self.products_file, 'r', encoding='utf-8') as f:
-                content = f.read().strip()
-                if not content:
-                    return []
-                products_data = json.loads(content)
+                products_data = json.load(f)
             
             products = []
             for product_data in products_data:
@@ -222,12 +219,8 @@ class JSONDatabase:
             # Load current products data
             try:
                 with open(self.products_file, 'r', encoding='utf-8') as f:
-                    content = f.read().strip()
-                    if content:
-                        products_data = json.loads(content)
-                    else:
-                        products_data = []
-            except (FileNotFoundError, json.JSONDecodeError, ValueError):
+                    products_data = json.load(f)
+            except FileNotFoundError:
                 products_data = []
             
             if existing_index is not None:
@@ -261,16 +254,8 @@ class JSONDatabase:
             # Load existing sessions
             sessions_data = []
             if self.sessions_file.exists():
-                try:
-                    with open(self.sessions_file, 'r', encoding='utf-8') as f:
-                        content = f.read().strip()
-                        if content:  # Only parse if file has content
-                            sessions_data = json.loads(content)
-                        else:
-                            sessions_data = []
-                except (json.JSONDecodeError, ValueError) as e:
-                    print(f"Warning: Could not load sessions file, starting fresh: {e}")
-                    sessions_data = []
+                with open(self.sessions_file, 'r', encoding='utf-8') as f:
+                    sessions_data = json.load(f)
             
             # Convert session to dict and handle datetime serialization
             session_dict = session.dict()
@@ -307,14 +292,8 @@ class JSONDatabase:
             if not self.sessions_file.exists():
                 return None
                 
-            try:
-                with open(self.sessions_file, 'r', encoding='utf-8') as f:
-                    content = f.read().strip()
-                    if not content:
-                        return None
-                    sessions_data = json.loads(content)
-            except (json.JSONDecodeError, ValueError):
-                return None
+            with open(self.sessions_file, 'r', encoding='utf-8') as f:
+                sessions_data = json.load(f)
             
             for session_data in sessions_data:
                 if session_data['id'] == session_id:

@@ -1,0 +1,56 @@
+{
+  "id": "session_20250925_114538_617031",
+  "created_at": "2025-09-25T11:45:38.617057",
+  "status": "active",
+  "data": {
+    "product": "iPhone 13 Pro",
+    "target_price": 500,
+    "max_price": 800,
+    "user_id": "interactive_user",
+    "tone": "professional",
+    "context": {
+      "seller_message": "AIzaSyDD94qIFoT1XQ62GLWzXpvLjKDgwaXpmpI",
+      "round": 0,
+      "timestamp": "2025-09-25T12:20:52.021577"
+    }
+  },
+  "messages": [],
+  "context_updates": [
+    {
+      "seller_message": "1",
+      "round": 0,
+      "timestamp": "2025-09-25T12:18:21.384881"
+    },
+    {
+      "seller_message": "iphone",
+      "round": 0,
+      "timestamp": "2025-09-25T12:18:27.804251"
+    },
+    {
+      "seller_message": "iphone 13 pro",
+      "round": 0,
+      "timestamp": "2025-09-25T12:18:38.493552"
+    },
+    {
+      "seller_message": "Hi! I'm selling this item.",
+      "round": 0,
+      "timestamp": "2025-09-25T12:20:01.940400"
+    },
+    {
+      "seller_message": "5",
+      "round": 0,
+      "timestamp": "2025-09-25T12:20:25.820858"
+    },
+    {
+      "seller_message": "1",
+      "round": 0,
+      "timestamp": "2025-09-25T12:20:27.967641"
+    },
+    {
+      "seller_message": "AIzaSyDD94qIFoT1XQ62GLWzXpvLjKDgwaXpmpI",
+      "round": 0,
+      "timestamp": "2025-09-25T12:20:52.021577"
+    }
+  ],
+  "last_updated": "2025-09-25T12:20:52.021587"
+}
