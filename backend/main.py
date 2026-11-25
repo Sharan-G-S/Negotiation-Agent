@@ -68,7 +68,7 @@ class UserRegistration(BaseModel):
 class UserLogin(BaseModel):
     username: str
     password: str
-    role: str = Field(..., description="User role: buyer or seller")
+    role: Optional[str] = Field(None, description="User role: buyer or seller (optional)")
 
 class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = None
@@ -248,12 +248,15 @@ async def register_user(user_data: UserRegistration):
 
 @app.post("/api/auth/login")
 async def login_user(user_credentials: UserLogin):
-    """Login user and create session"""
+    """Login user and create session (handles both buyers and sellers)"""
     try:
+        # Make role optional for backward compatibility
+        role = getattr(user_credentials, 'role', None)
+        
         result = await auth_service.login_user(
             username=user_credentials.username,
             password=user_credentials.password,
-            role=user_credentials.role
+            role=role
         )
         
         if result["success"]:
@@ -267,6 +270,8 @@ async def login_user(user_credentials: UserLogin):
         else:
             raise HTTPException(status_code=401, detail=result["message"])
             
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Login error: {str(e)}")
         raise HTTPException(status_code=500, detail="Login failed")
@@ -878,29 +883,8 @@ async def register_seller(user_data: UserRegistration):
         raise HTTPException(status_code=500, detail="Registration failed")
 
 
-@app.post("/api/auth/login")
-async def login_seller(credentials: UserLogin):
-    """Authenticate seller login"""
-    try:
-        result = auth_service.login_seller(
-            username=credentials.username,
-            password=credentials.password
-        )
-        
-        if result['success']:
-            return {
-                "success": True,
-                "access_token": result['access_token'],
-                "token_type": result['token_type'],
-                "session_id": result['session_id'],
-                "user": result['user']
-            }
-        else:
-            raise HTTPException(status_code=401, detail=result['error'])
-            
-    except Exception as e:
-        logger.error(f"Login error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Login failed")
+# Legacy seller login endpoint - consolidated into main login above
+# This section has been removed to prevent endpoint conflicts
 
 
 @app.post("/api/auth/logout")

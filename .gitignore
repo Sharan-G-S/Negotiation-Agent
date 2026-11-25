@@ -79,3 +79,5 @@ env/
 
 # Dependency directories
 .dependencies_installed
+# macOS
+.DS_Store

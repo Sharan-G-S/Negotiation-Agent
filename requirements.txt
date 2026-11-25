@@ -1,11 +1,14 @@
 fastapi
 uvicorn
 websockets
+jinja2
 aiohttp
 httpx
 beautifulsoup4
 lxml
 google-generativeai
+langchain
+langchain-google-genai
 pydantic
 python-dateutil
 python-dotenv

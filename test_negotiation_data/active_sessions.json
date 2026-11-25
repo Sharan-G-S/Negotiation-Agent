@@ -1,0 +1,62 @@
+{
+  "session_20250925_112034_214690": {
+    "id": "session_20250925_112034_214690",
+    "created_at": "2025-09-25T11:20:34.214757",
+    "status": "active",
+    "data": {
+      "product_info": {
+        "name": "iPhone 13 Pro",
+        "listed_price": 800,
+        "seller": "John Doe",
+        "platform": "Facebook Marketplace"
+      },
+      "goals": {
+        "target_price": 650,
+        "max_budget": 720,
+        "timeline": "flexible"
+      },
+      "user_preferences": {},
+      "negotiation_state": {
+        "phase": "greeting",
+        "round": 0,
+        "tactics_used": [],
+        "offers_made": [],
+        "seller_offers": []
+      },
+      "market_data": {},
+      "seller_analysis": {}
+    },
+    "messages": [],
+    "context_updates": []
+  },
+  "session_20250925_112303_962823": {
+    "id": "session_20250925_112303_962823",
+    "created_at": "2025-09-25T11:23:03.962883",
+    "status": "active",
+    "data": {
+      "product_info": {
+        "name": "iPhone 13 Pro",
+        "listed_price": 800,
+        "seller": "John Doe",
+        "platform": "Facebook Marketplace"
+      },
+      "goals": {
+        "target_price": 650,
+        "max_budget": 720,
+        "timeline": "flexible"
+      },
+      "user_preferences": {},
+      "negotiation_state": {
+        "phase": "greeting",
+        "round": 0,
+        "tactics_used": [],
+        "offers_made": [],
+        "seller_offers": []
+      },
+      "market_data": {},
+      "seller_analysis": {}
+    },
+    "messages": [],
+    "context_updates": []
+  }
+}
